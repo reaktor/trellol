@@ -9,31 +9,26 @@
 import Leap, sys
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 
-from Xlib import X, display
+from Xlib import X, display, protocol
+from pymouse import PyMouse
 
 class SampleListener(Leap.Listener):
 
     d = display.Display()
     s = d.screen()
-    s.root.grab_pointer(1, X.ButtonPressMask | X.ButtonReleaseMask | X.Button1MotionMask,
-                        X.GrabModeAsync, X.GrabModeAsync, X.NONE, X.NONE, X.CurrentTime)
     screen_wc = (s.width_in_pixels/2)
     screen_hc = (s.height_in_pixels/2)
+    downPressed = False
+    mouse = PyMouse()
 
     def on_init(self, controller):
         print "Initialized"
 
     def on_connect(self, controller):
         print "Connected"
-
-        # Enable gestures
-        # controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE);
         controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP);
-        # controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP);
-        # controller.enable_gesture(Leap.Gesture.TYPE_SWIPE);
 
     def on_disconnect(self, controller):
-        # Note: not dispatched when running in a debugger.
         print "Disconnected"
 
     def on_exit(self, controller):
@@ -48,11 +43,8 @@ class SampleListener(Leap.Listener):
             # print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
             #     frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures()))            
 
-            # Get the first hand
-            hand = frame.hands[0]
-
             # Check if the hand has any fingers
-            fingers = hand.fingers
+            fingers = frame.hands[0].fingers
             if not fingers.empty:
                 # Calculate the hand's average finger tip position
                 avg_pos = Leap.Vector()
@@ -65,29 +57,36 @@ class SampleListener(Leap.Listener):
                 y_desc = "D" * int(y/10) if y < 100 else "U" * max(10, int(y/25))
                 z_desc = "F" * -int(z/25) if z < 0 else "B" * int(z/25) 
 
-                xpos = self.screen_wc + x*5
-                ypos = self.screen_hc + z*5
+                xpos = self.screen_wc + x*10
+                ypos = self.screen_hc + z*10
+
+                print xpos, ypos
 
                 desc = "%s %s %s" % (x_desc, y_desc, z_desc)
-                print "ahpos %4d %4d %4d | %5s %10s %5s | %d %d" % (x,y,z, x_desc, y_desc, z_desc, xpos, ypos)
+                # print "ahpos %4d %4d %4d | %5s %10s %5s | %d %d" % (x,y,z, x_desc, y_desc, z_desc, xpos, ypos)
 
                 new_x = max(min(xpos, self.s.width_in_pixels),0)
                 new_y = max(min(ypos, self.s.height_in_pixels),0)
                 self.s.root.warp_pointer(new_x, new_y)
                 self.d.sync()
 
-            # Get the hand's normal vector and direction
-            normal = hand.palm_normal
-            direction = hand.direction
-
             # TAP
             for gesture in frame.gestures():
                 if gesture.type == Leap.Gesture.TYPE_KEY_TAP:
                     keytap = KeyTapGesture(gesture)
-                    print "Key Tap id: %d, %s, position: %s, direction: %s" % (
-                            gesture.id, self.state_string(gesture.state),
-                            keytap.position, keytap.direction )
-                    self.s.root.send_event()
+                    # print "Key Tap id: %d, %s, position: %s, direction: %s" % (
+                    #         gesture.id, self.state_string(gesture.state),
+                    #         keytap.position, keytap.direction )
+
+                    x,y = self.mouse.position()
+                    if self.downPressed:
+                        self.mouse.press(x,y)
+                        print "UP"
+                    else:
+                        self.mouse.release(x,y)
+                        print "DOWN"
+                    
+                    self.downPressed = not self.downPressed
                     
                     
     def state_string(self, state):
