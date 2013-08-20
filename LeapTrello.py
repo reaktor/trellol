@@ -143,6 +143,10 @@ class MyCard( Card ):
 class TrelloBoard(QtGui.QMainWindow):
     def __init__(self, client):
         QtGui.QMainWindow.__init__(self)
+        self.col_dist = 350
+        self.row_dist = 50
+        self.x0 = 20
+        self.y0 = 20
         self.client = client
         self.initUI()
 
@@ -157,14 +161,11 @@ class TrelloBoard(QtGui.QMainWindow):
 
     def setContent(self, client):
 
-        x = 20
-        y = 20
+        x = self.x0
         for list in client.getLists():
-            for card in client.getCardsByList( list.id ):
-                TrelloCard(self, x, y, card.id, card.name)
-                y += 50
-            x += 330
-            y = 20
+            cards = client.getCardsByList( list.id )
+            self.setListContent(x, self.y0, cards)
+            x += self.col_dist
 
         #a = TrelloCard(self, 20, 20, '521349f9204ffcad710002c0', client)
         #b = FakeTrelloCard(self, 20, 70)
@@ -188,6 +189,12 @@ class TrelloBoard(QtGui.QMainWindow):
         #d = FakeTrelloCard(self, 680, 170)
         #e = FakeTrelloCard(self, 680, 220)
 
+    def setListContent( self, x, y, cards ):
+        TrelloList( self, x, y, len( cards ) )
+
+        for card in cards:
+            TrelloCard(self, x, y, card.id, card.name)
+            y += self.row_dist
 
     def center(self):
         screen = QtGui.QDesktopWidget().screenGeometry()
@@ -238,6 +245,14 @@ class TrelloCard(QtGui.QLabel):
     def deselect(self):
         self.setStyleSheet("QWidget { background-color: %s }" % self.col_deselect)
 
+class TrelloList(QtGui.QFrame):
+    def __init__(self, parent, xpos, ypos, card_count):
+        QtGui.QLabel.__init__(self, parent)
+        x_offset = 10;
+        y_offset = 10;
+        self.backgroundColor = "#FFF"
+        self.setGeometry(xpos - x_offset, ypos - y_offset, 320, card_count * 50 + y_offset)
+        self.setStyleSheet("QWidget { background-color: %s }" % self.backgroundColor)
 
 
 def main():    
