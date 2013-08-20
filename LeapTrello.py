@@ -1,17 +1,18 @@
-################################################################################
-# Copyright (C) 2012-2013 Leap Motion, Inc. All rights reserved.               #
-# Leap Motion proprietary and confidential. Not for distribution.              #
-# Use subject to the terms of the Leap Motion SDK Agreement available at       #
-# https://developer.leapmotion.com/sdk_agreement, or another agreement         #
-# between Leap Motion and you, your company or other organization.             #
-################################################################################
+#!/usr/bin/python                                                                                                      
+# -*- coding: utf-8 -*- 
+
+"""
+Leap Motion + Trello
+
+A plain Trello view with Leap Motion UI.
+"""
 
 import Leap, sys
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
-
 from pymouse import PyMouse
+from PyQt4 import QtGui, QtCore
 
-class SampleListener(Leap.Listener):
+class LeapListener(Leap.Listener):
 
     mouse = PyMouse()
     width_in_pixels, height_in_pixels = mouse.screen_size()
@@ -34,60 +35,46 @@ class SampleListener(Leap.Listener):
         print "Exited"
 
     def on_frame(self, controller):
-        # Get the most recent frame and report some basic information
         frame = controller.frame()
 
         if not frame.hands.empty:
-
-            # print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
-            #     frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures()))            
-
-            # Check if the hand has any fingers
             fingers = frame.hands[0].fingers
+            xpos = ypos = 0
+
             if not fingers.empty:
                 # Calculate the hand's average finger tip position
                 avg_pos = Leap.Vector()
                 for finger in fingers:
                     avg_pos += finger.tip_position
                 avg_pos /= len(fingers)
-                x,y,z = int(avg_pos[0]),int(avg_pos[1]),int(avg_pos[2])
+                x,y,z = avg_pos[0],avg_pos[1],avg_pos[2]
+
+                print "(%5f,%5f) %5f" % (x, z, y)
+
+                rawxpos = self.screen_wc + x*15
+                rawypos = self.screen_hc + z*15
+
+                xpos = max(min(rawxpos, self.width_in_pixels),0)
+                ypos = max(min(rawypos, self.height_in_pixels),0)
+
                 
-                x_desc = "L" * -int(x/25) if x < 0 else "R" * int(x/25) 
-                y_desc = "D" * int(y/10) if y < 100 else "U" * max(10, int(y/25))
-                z_desc = "F" * -int(z/25) if z < 0 else "B" * int(z/25) 
-
-                xpos = self.screen_wc + x*10
-                ypos = self.screen_hc + z*10
-
-                print xpos, ypos
-
-                desc = "%s %s %s" % (x_desc, y_desc, z_desc)
-                # print "ahpos %4d %4d %4d | %5s %10s %5s | %d %d" % (x,y,z, x_desc, y_desc, z_desc, xpos, ypos)
-
-                new_x = max(min(xpos, self.width_in_pixels),0)
-                new_y = max(min(ypos, self.height_in_pixels),0)
-                self.mouse.move(new_x, new_y)
+            self.mouse.move(xpos, ypos)
      
             # TAP
             for gesture in frame.gestures():
                 if gesture.type == Leap.Gesture.TYPE_KEY_TAP:
-                    keytap = KeyTapGesture(gesture)
-                    # print "Key Tap id: %d, %s, position: %s, direction: %s" % (
-                    #         gesture.id, self.state_string(gesture.state),
-                    #         keytap.position, keytap.direction )
 
-                    x,y = self.mouse.position()
                     if self.downPressed:
-                        self.mouse.press(x,y)
+                        self.mouse.press(xpos,ypos)
                         print "UP"
                     else:
-                        self.mouse.release(x,y)
+                        self.mouse.release(xpos,ypos)
                         print "DOWN"
                     
                     self.downPressed = not self.downPressed
                     
                     
-    def state_string(self, state):
+    def state_string(self, state):        
         if state == Leap.Gesture.STATE_START:
             return "STATE_START"
 
@@ -100,21 +87,50 @@ class SampleListener(Leap.Listener):
         if state == Leap.Gesture.STATE_INVALID:
             return "STATE_INVALID"
 
-def main():
-    # Create a sample listener and controller
-    listener = SampleListener()
-    controller = Leap.Controller()
 
-    # Have the sample listener receive events from the controller
+class TrelloBoard(QtGui.QMainWindow):
+    def __init__(self):
+        QtGui.QMainWindow.__init__(self)
+
+        self.initUI()
+
+    def initUI(self):           
+        self.setWindowTitle('Leap Motion + Trello')
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        # self.setAttribute(QtCore.Qt.WA_TranslucentBackground) # Enable later for max awesome        
+        self.center()
+        self.show()
+
+    def center(self):
+        screen = QtGui.QDesktopWidget().screenGeometry()
+        self.setGeometry(100, 100, 1200, 800)        
+        size = self.geometry()
+        self.move((screen.width() - size.width()) / 2, (screen.height() - size.height()) / 2)
+        
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == QtCore.Qt.Key_Escape:
+            self.close()
+        elif key == QtCore.Qt.Key_F:
+            if self.windowState() & QtCore.Qt.WindowFullScreen:
+                self.showNormal()
+            else:
+                self.showFullScreen()
+        else:
+            QtGui.QWidget.keyPressEvent(self, event)
+
+def main():    
+    app = QtGui.QApplication(sys.argv)
+    board = TrelloBoard()
+
+    listener = LeapListener()
+    controller = Leap.Controller()
     controller.add_listener(listener)
 
-    # Keep this process running until Enter is pressed
-    print "Press Enter to quit..."
-    sys.stdin.readline()
+    app.exec_() # blocking
 
-    # Remove the sample listener when done
     controller.remove_listener(listener)
-
+    print "Finished"
 
 if __name__ == "__main__":
     main()
