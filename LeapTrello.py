@@ -110,12 +110,12 @@ class TrelloClient:
     def getCardInformation( self, card_id, query_params = {} ):
         return MyCard( self.client, card_id ).getCardInformation(query_params)
 
-    def getCards( self, board_id):
-        board = Board( self.client, board_id)
+    def getCards( self ):
+        board = Board( self.client, self.board_id)
         return board.getCards()
 
-    def getLists( self, board_id ):
-        board = Board( self.client, board_id)
+    def getLists( self ):
+        board = Board( self.client, self.board_id)
         return board.getLists()
 
     def getCardsByList( self, list_id ):
@@ -141,42 +141,52 @@ class MyCard( Card ):
         return self.createCard( card_json )
 
 class TrelloBoard(QtGui.QMainWindow):
-    def __init__(self):
+    def __init__(self, client):
         QtGui.QMainWindow.__init__(self)
-
+        self.client = client
         self.initUI()
 
     def initUI(self):           
         self.setWindowTitle('Leap Motion + Trello')
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
 
-        self.setContent()
+        self.setContent(self.client)
 
         self.center()
         self.show()
 
-    def setContent(self):
-        a = FakeTrelloCard(self, 20, 20)
-        b = FakeTrelloCard(self, 20, 70)
-        c = FakeTrelloCard(self, 20, 120)
-        d = FakeTrelloCard(self, 20, 170)
-        e = FakeTrelloCard(self, 20, 220)
+    def setContent(self, client):
 
-        a = FakeTrelloCard(self, 350, 20)
-        b = FakeTrelloCard(self, 350, 70)
-        c = FakeTrelloCard(self, 350, 120)
-        d = FakeTrelloCard(self, 350, 170)
-        e = FakeTrelloCard(self, 350, 220)
-        d = FakeTrelloCard(self, 350, 270)
-        e = FakeTrelloCard(self, 350, 320)
-        d = FakeTrelloCard(self, 350, 370)
-        e = FakeTrelloCard(self, 350, 420)
+        x = 20
+        y = 20
+        for list in client.getLists():
+            for card in client.getCardsByList( list.id ):
+                TrelloCard(self, x, y, card.id, client)
+                y += 50
+            x += 330
+            y = 20
 
-        a = FakeTrelloCard(self, 680, 20)
-        b = FakeTrelloCard(self, 680, 70)
-        c = FakeTrelloCard(self, 680, 120)
-        d = FakeTrelloCard(self, 680, 170)
-        e = FakeTrelloCard(self, 680, 220)
+        #a = TrelloCard(self, 20, 20, '521349f9204ffcad710002c0', client)
+        #b = FakeTrelloCard(self, 20, 70)
+        #c = FakeTrelloCard(self, 20, 120)
+        #d = FakeTrelloCard(self, 20, 170)
+        #e = FakeTrelloCard(self, 20, 220)
+
+        #a = FakeTrelloCard(self, 350, 20)
+        #b = FakeTrelloCard(self, 350, 70)
+        #c = FakeTrelloCard(self, 350, 120)
+        #d = FakeTrelloCard(self, 350, 170)
+        #e = FakeTrelloCard(self, 350, 220)
+        #d = FakeTrelloCard(self, 350, 270)
+        #e = FakeTrelloCard(self, 350, 320)
+        #d = FakeTrelloCard(self, 350, 370)
+        #e = FakeTrelloCard(self, 350, 420)
+
+        #a = FakeTrelloCard(self, 680, 20)
+        #b = FakeTrelloCard(self, 680, 70)
+        #c = FakeTrelloCard(self, 680, 120)
+        #d = FakeTrelloCard(self, 680, 170)
+        #e = FakeTrelloCard(self, 680, 220)
 
 
     def center(self):
@@ -212,11 +222,28 @@ class FakeTrelloCard(QtGui.QFrame):
     def deselect(self):
         self.setStyleSheet("QWidget { background-color: %s }" % self.col_deselect)
 
+
+class TrelloCard(QtGui.QLabel):    
+    def __init__(self, parent, xpos, ypos, id, client):
+        QtGui.QLabel.__init__(self, parent)
+        self.setGeometry(xpos, ypos, 300, 40)
+        self.setText( "id: " + id )
+        self.col_deselect = "#AAA"
+        self.col_select = "#A44"
+        self.deselect()
+        
+    def select(self):
+        self.setStyleSheet("QWidget { background-color: %s }" % self.col_select)
+
+    def deselect(self):
+        self.setStyleSheet("QWidget { background-color: %s }" % self.col_deselect)
+
+
+
 def main():    
     app = QtGui.QApplication(sys.argv)
     client = TrelloClient()
-
-    board = TrelloBoard()
+    board = TrelloBoard(client)
 
     listener = LeapListener()
     controller = Leap.Controller()
