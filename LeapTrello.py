@@ -106,10 +106,13 @@ class TrelloClient:
 
     def __init__( self ) :
         print("Initialized Trello Client...")
-        print self.getCardInformation( self.card_id )
 
     def getCardInformation( self, card_id, query_params = {} ):
         return MyCard( self.client, card_id ).getCardInformation(query_params)
+
+    def getCards( self, board_id):
+        board = Board( self.client, board_id)
+        return board.getCards()
 
     def getLists( self, board_id ):
         board = Board( self.client, board_id)
@@ -212,6 +215,7 @@ class FakeTrelloCard(QtGui.QFrame):
 def main():    
     app = QtGui.QApplication(sys.argv)
     client = TrelloClient()
+
     board = TrelloBoard()
 
     listener = LeapListener()
