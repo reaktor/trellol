@@ -9,17 +9,15 @@
 import Leap, sys
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 
-from Xlib import X, display, protocol
 from pymouse import PyMouse
 
 class SampleListener(Leap.Listener):
 
-    d = display.Display()
-    s = d.screen()
-    screen_wc = (s.width_in_pixels/2)
-    screen_hc = (s.height_in_pixels/2)
-    downPressed = False
     mouse = PyMouse()
+    width_in_pixels, height_in_pixels = mouse.screen_size()
+    screen_wc = (width_in_pixels/2)
+    screen_hc = (height_in_pixels/2)
+    downPressed = False  
 
     def on_init(self, controller):
         print "Initialized"
@@ -27,6 +25,7 @@ class SampleListener(Leap.Listener):
     def on_connect(self, controller):
         print "Connected"
         controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP);
+        controller.set_policy_flags(Leap.Controller.POLICY_BACKGROUND_FRAMES)
 
     def on_disconnect(self, controller):
         print "Disconnected"
@@ -65,11 +64,10 @@ class SampleListener(Leap.Listener):
                 desc = "%s %s %s" % (x_desc, y_desc, z_desc)
                 # print "ahpos %4d %4d %4d | %5s %10s %5s | %d %d" % (x,y,z, x_desc, y_desc, z_desc, xpos, ypos)
 
-                new_x = max(min(xpos, self.s.width_in_pixels),0)
-                new_y = max(min(ypos, self.s.height_in_pixels),0)
-                self.s.root.warp_pointer(new_x, new_y)
-                self.d.sync()
-
+                new_x = max(min(xpos, self.width_in_pixels),0)
+                new_y = max(min(ypos, self.height_in_pixels),0)
+                self.mouse.move(new_x, new_y)
+     
             # TAP
             for gesture in frame.gestures():
                 if gesture.type == Leap.Gesture.TYPE_KEY_TAP:
