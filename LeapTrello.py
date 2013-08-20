@@ -106,7 +106,10 @@ class TrelloClient:
     client = Client( api_key, user_auth_token )
 
     def __init__( self ) :
-        self.getLists( self.board_id )
+        print("Initialized Trello Client...")
+
+    def getCardInformation( self, card_id, query_params = {} ):
+        return MyCard( self.client, card_id ).getCardInformation(query_params)
 
     def getLists( self, board_id ):
         board = Board( self.client, board_id)
