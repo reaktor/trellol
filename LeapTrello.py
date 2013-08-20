@@ -65,7 +65,6 @@ class LeapListener(Leap.Listener):
 
                 xpos = max(min(rawxpos, self.width_in_pixels),0)
                 ypos = max(min(rawypos, self.height_in_pixels),0)
-
                 
             self.mouse.move(xpos, ypos)
      
@@ -138,7 +137,6 @@ class MyCard( Card ):
         )
         return self.createCard( card_json )
 
-
 class TrelloBoard(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
@@ -148,9 +146,35 @@ class TrelloBoard(QtGui.QMainWindow):
     def initUI(self):           
         self.setWindowTitle('Leap Motion + Trello')
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-        # self.setAttribute(QtCore.Qt.WA_TranslucentBackground) # Enable later for max awesome        
+
+        self.setContent()
+
         self.center()
         self.show()
+
+    def setContent(self):
+        a = FakeTrelloCard(self, 20, 20)
+        b = FakeTrelloCard(self, 20, 70)
+        c = FakeTrelloCard(self, 20, 120)
+        d = FakeTrelloCard(self, 20, 170)
+        e = FakeTrelloCard(self, 20, 220)
+
+        a = FakeTrelloCard(self, 350, 20)
+        b = FakeTrelloCard(self, 350, 70)
+        c = FakeTrelloCard(self, 350, 120)
+        d = FakeTrelloCard(self, 350, 170)
+        e = FakeTrelloCard(self, 350, 220)
+        d = FakeTrelloCard(self, 350, 270)
+        e = FakeTrelloCard(self, 350, 320)
+        d = FakeTrelloCard(self, 350, 370)
+        e = FakeTrelloCard(self, 350, 420)
+
+        a = FakeTrelloCard(self, 680, 20)
+        b = FakeTrelloCard(self, 680, 70)
+        c = FakeTrelloCard(self, 680, 120)
+        d = FakeTrelloCard(self, 680, 170)
+        e = FakeTrelloCard(self, 680, 220)
+
 
     def center(self):
         screen = QtGui.QDesktopWidget().screenGeometry()
@@ -169,6 +193,21 @@ class TrelloBoard(QtGui.QMainWindow):
                 self.showFullScreen()
         else:
             QtGui.QWidget.keyPressEvent(self, event)
+
+
+class FakeTrelloCard(QtGui.QFrame):    
+    def __init__(self, parent, xpos, ypos):
+        QtGui.QFrame.__init__(self, parent)
+        self.setGeometry(xpos, ypos, 300, 40)
+        self.col_deselect = "#AAA"
+        self.col_select = "#A44"
+        self.deselect()
+        
+    def select(self):
+        self.setStyleSheet("QWidget { background-color: %s }" % self.col_select)
+
+    def deselect(self):
+        self.setStyleSheet("QWidget { background-color: %s }" % self.col_deselect)
 
 def main():    
     app = QtGui.QApplication(sys.argv)
