@@ -161,7 +161,7 @@ class TrelloBoard(QtGui.QMainWindow):
         y = 20
         for list in client.getLists():
             for card in client.getCardsByList( list.id ):
-                TrelloCard(self, x, y, card.id, client)
+                TrelloCard(self, x, y, card.id, card.name)
                 y += 50
             x += 330
             y = 20
@@ -224,10 +224,10 @@ class FakeTrelloCard(QtGui.QFrame):
 
 
 class TrelloCard(QtGui.QLabel):    
-    def __init__(self, parent, xpos, ypos, id, client):
+    def __init__(self, parent, xpos, ypos, id, name):
         QtGui.QLabel.__init__(self, parent)
         self.setGeometry(xpos, ypos, 300, 40)
-        self.setText( "id: " + id )
+        self.setText( "id: " + id + "\nname: " + name)
         self.col_deselect = "#AAA"
         self.col_select = "#A44"
         self.deselect()
