@@ -1,0 +1,15 @@
+#! /bin/bash
+
+SELECTION=$(uname -s)
+LEAPTRELLO_ROOT=$(pwd)
+
+if [ "$SELECTION" == "Linux" ]; then
+    export PYTHONPATH=$PYTHONPATH:$LEAPTRELLO_ROOT/lib/Linux;
+elif [ "$SELECTION" == "Darwin" ]; then
+    export PYTHONPATH=$PYTHONPATH:$LEAPTRELLO_ROOT/lib/Mac;
+else
+    echo "Can't deal with $SELECTION machines."
+    exit
+fi
+
+python LeapTrello.py
