@@ -12,6 +12,15 @@ from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 from pymouse import PyMouse
 from PyQt4 import QtGui, QtCore
 
+from trolly.client import Client
+from trolly.organisation import Organisation
+from trolly.board import Board
+from trolly.list import List
+from trolly.card import Card
+from trolly.checklist import Checklist
+from trolly.member import Member
+from trolly import ResourceUnavailable
+
 class LeapListener(Leap.Listener):
 
     mouse = PyMouse()
@@ -87,6 +96,44 @@ class LeapListener(Leap.Listener):
         if state == Leap.Gesture.STATE_INVALID:
             return "STATE_INVALID"
 
+class TrelloClient:
+
+    api_key = 'cae2c8a0e8fff08a3031310959cb94c8'
+    user_auth_token = 'edd28ce8296002f04b3e0d8a06674a27bacae743aba77e15c8eec353c13541a8'
+    board_id = '52120adfbcec5a8c6a0018a8'
+    card_id = '521349f9204ffcad710002c0'
+    list_id = '52120adfbcec5a8c6a0018ab'
+    client = Client( api_key, user_auth_token )
+
+    def __init__( self ) :
+        self.getLists( self.board_id )
+
+    def getLists( self, board_id ):
+        board = Board( self.client, board_id)
+        return board.getLists()
+
+    def getCardsByList( self, list_id ):
+        list = List( self.client, list_id )
+        return list.getCards()
+ 
+    def putCardToList( self, card_id, list_id ):
+        card = MyCard( self.client, card_id)
+        card.putToList({ 'value' : list_id })
+    
+
+class MyCard( Card ):
+
+    def __init__( self, trello_client, card_id, name = '' ):
+        super( MyCard, self ).__init__( trello_client, card_id, name )
+
+    def putToList( self, query_params = {} ):
+        card_json = self.fetchJson(
+            uri_path = self.base_uri + '/idList',
+            http_method = 'PUT',
+            query_params = query_params
+        )
+        return self.createCard( card_json )
+
 
 class TrelloBoard(QtGui.QMainWindow):
     def __init__(self):
@@ -121,6 +168,7 @@ class TrelloBoard(QtGui.QMainWindow):
 
 def main():    
     app = QtGui.QApplication(sys.argv)
+    client = TrelloClient()
     board = TrelloBoard()
 
     listener = LeapListener()
