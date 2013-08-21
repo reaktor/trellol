@@ -90,7 +90,7 @@ class LeapListener(Leap.Listener):
 class TrelloClient:
 
     api_key = 'cae2c8a0e8fff08a3031310959cb94c8'
-    user_auth_token = 'fe9136da8f4bd3f9400996bfd21077bf73250e884a642800360a26915ed3a315'
+    user_auth_token = '9bbf9f6e2b89d7c098eca47f2265609ee4c04fb317e6f1da1c2ffd5b0daba448'
     board_id = '52120adfbcec5a8c6a0018a8'
     card_id = '521349f9204ffcad710002c0'
     list_id = '52120adfbcec5a8c6a0018ab'
