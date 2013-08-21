@@ -98,7 +98,7 @@ class LeapListener(Leap.Listener):
 class TrelloClient:
 
     api_key = 'cae2c8a0e8fff08a3031310959cb94c8'
-    user_auth_token = 'edd28ce8296002f04b3e0d8a06674a27bacae743aba77e15c8eec353c13541a8'
+    user_auth_token = 'fe9136da8f4bd3f9400996bfd21077bf73250e884a642800360a26915ed3a315'
     board_id = '52120adfbcec5a8c6a0018a8'
     card_id = '521349f9204ffcad710002c0'
     list_id = '52120adfbcec5a8c6a0018ab'
@@ -184,21 +184,17 @@ class TrelloBoard(QtGui.QMainWindow):
         self.move((screen.width() - size.width()) / 2, (screen.height() - size.height()) / 2)
 
     def setContent(self, client):
+        hbox = QtGui.QHBoxLayout()
+        hbox.setSpacing(20)
 
-        grid = QtGui.QGridLayout()
-        grid.setHorizontalSpacing(20)
-        
-        lists = client.getLists()
-        for y in range(0, len(lists)):
-            list = lists[y]
+        trello_lists = client.getLists()
+        for y in range(0, len(trello_lists)):
+            list = trello_lists[y]
             cards = client.getCardsByList( list.id )
+            hbox.addLayout( TrelloList( self, list.name, cards ) ) 
 
-            for x in range(0, len(cards)):
-                card = cards[x]
-                grid.addWidget(TrelloCard(self, card.id, card.name), x, y)
-
-        self.currentCard = grid.itemAtPosition(0,0).widget()
-        return grid
+        self.currentCard = hbox.itemAt(0).itemAt(1).widget()
+        return hbox
         
     def keyPressEvent(self, event):
         key = event.key()
@@ -230,6 +226,7 @@ class TrelloCard(QtGui.QLabel):
         self.deselect()
         self.setMouseTracking(True)
         self.parent = parent
+        self.setFixedHeight(80)
         
     def select(self):
         self.setStyleSheet("QWidget { background-color: %s }" % self.colorSelect)
@@ -259,9 +256,9 @@ class TrelloCard(QtGui.QLabel):
             dropAction = drag.start(QtCore.Qt.MoveAction)
 
         elif (self.parent.currentCard is not self): # TODO: assumes no buttons
-                self.parent.currentCard.deselect()
-                self.parent.currentCard = self
-                self.select()
+            self.parent.currentCard.deselect()
+            self.parent.currentCard = self
+            self.select()
 
         return QtGui.QFrame.mouseMoveEvent(self, event)
 
@@ -272,14 +269,19 @@ class TrelloCard(QtGui.QLabel):
         return "Card @  %s" % (self.geometry())
 
 
-class TrelloList(QtGui.QFrame):
-    def __init__(self, parent, xpos, ypos, card_count):
+class TrelloList(QtGui.QFormLayout):
+    def __init__(self, parent, name, cards):
+        QtGui.QFormLayout.__init__(self)
+        self.addWidget( TrelloListHeader( parent, name ) )
+        for card in cards:
+            #TODO: parent
+            self.addWidget( TrelloCard( parent, card.id, card.name) )
+
+class TrelloListHeader(QtGui.QLabel):
+    def __init__(self, parent, text):
         QtGui.QLabel.__init__(self, parent)
-        x_offset = 10
-        y_offset = 10
-        self.backgroundColor = "#FFF"
-        self.setGeometry(xpos - x_offset, ypos - y_offset, 320, card_count * 50 + y_offset)
-        self.setStyleSheet("QWidget { background-color: %s }" % self.backgroundColor)
+        self.setText(text)
+        self.setStyleSheet("QWidget { font: bold 15px }")
 
 def main():    
     app = QtGui.QApplication(sys.argv)
