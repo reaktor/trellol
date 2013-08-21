@@ -153,7 +153,7 @@ class TrelloBoard(QtGui.QMainWindow):
     def initUI(self):           
         self.setWindowTitle('Leap Motion + Trello')
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-
+        self.setAcceptDrops(True)
         self.setContent(self.client)
 
         self.center()
@@ -214,6 +214,14 @@ class TrelloBoard(QtGui.QMainWindow):
         else:
             QtGui.QWidget.keyPressEvent(self, event)
 
+    def dragEnterEvent(self, e):  
+        e.accept()
+
+    def dropEvent(self, e):
+        position = e.pos()
+        e.source().move(position - e.source().rect().center())
+        e.setDropAction(QtCore.Qt.MoveAction)
+        e.accept()
 
 class FakeTrelloCard(QtGui.QFrame):    
     def __init__(self, parent, xpos, ypos):
@@ -245,11 +253,29 @@ class TrelloCard(QtGui.QLabel):
     def deselect(self):
         self.setStyleSheet("QWidget { background-color: %s }" % self.col_deselect)
 
+    def mouseMoveEvent(self, e):
+
+        if e.buttons() != QtCore.Qt.LeftButton:
+            return
+
+        mimeData = QtCore.QMimeData()
+        pixmap = QtGui.QPixmap.grabWidget(self)
+
+        drag = QtGui.QDrag(self)
+        drag.setMimeData(mimeData)
+        drag.setPixmap(pixmap);
+        drag.setHotSpot(e.pos())
+
+        dropAction = drag.start(QtCore.Qt.MoveAction)
+
+    def mousePressEvent(self, e):
+        QtGui.QLabel.mousePressEvent(self, e)
+
 class TrelloList(QtGui.QFrame):
     def __init__(self, parent, xpos, ypos, card_count):
         QtGui.QLabel.__init__(self, parent)
-        x_offset = 10;
-        y_offset = 10;
+        x_offset = 10
+        y_offset = 10
         self.backgroundColor = "#FFF"
         self.setGeometry(xpos - x_offset, ypos - y_offset, 320, card_count * 50 + y_offset)
         self.setStyleSheet("QWidget { background-color: %s }" % self.backgroundColor)
