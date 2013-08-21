@@ -7,7 +7,7 @@ Leap Motion + Trello
 A plain Trello view with Leap Motion UI.
 """
 
-import Leap, sys, os, math, random
+import Leap, sys, os, math, collections
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 from pymouse import PyMouse
 from PyQt4 import QtGui, QtCore
@@ -23,12 +23,17 @@ from trolly import ResourceUnavailable
 
 class LeapListener(Leap.Listener):
 
-    mouse = PyMouse()
-    width_in_pixels, height_in_pixels = mouse.screen_size()
-    screen_wc = (width_in_pixels/2)
-    screen_hc = (height_in_pixels/2)
-    downPressed = False  
+    def __init__(self):
+        Leap.Listener.__init__(self)
 
+        self.mouse = PyMouse()
+        self.screenW, self.screenH = self.mouse.screen_size()
+        self.screenCenterW = self.screenW / 2
+        self.screenCenterH = self.screenH / 2
+
+        self.downPressed = False    
+        self.pointingMultiplier = 15
+                
     def on_init(self, controller):
         print "Initialized"
 
@@ -47,24 +52,13 @@ class LeapListener(Leap.Listener):
         frame = controller.frame()
 
         if not frame.hands.empty:
-            fingers = frame.hands[0].fingers
-            xpos = ypos = 0
-
-            if not fingers.empty:
-                # Calculate the hand's average finger tip position
-                avg_pos = Leap.Vector()
-                for finger in fingers:
-                    avg_pos += finger.tip_position
-                avg_pos /= len(fingers)
-                x,y,z = avg_pos[0],avg_pos[1],avg_pos[2]
-
-                print "(%5f,%5f) %5f" % (x, z, y)
-
-                rawxpos = self.screen_wc + x*15
-                rawypos = self.screen_hc + z*15
-
-                xpos = max(min(rawxpos, self.width_in_pixels),0)
-                ypos = max(min(rawypos, self.height_in_pixels),0)
+            hpos = frame.hands[0].palm_position
+            x,y,z = hpos[0],hpos[1],hpos[2]
+                
+            rawxpos = self.screenCenterW + x*self.pointingMultiplier
+            rawypos = self.screenCenterH + z*self.pointingMultiplier
+            xpos = max(min(rawxpos, self.screenW),0)
+            ypos = max(min(rawypos, self.screenH),0)
                 
             self.mouse.move(xpos, ypos)
      
@@ -74,10 +68,8 @@ class LeapListener(Leap.Listener):
 
                     if self.downPressed:
                         self.mouse.press(xpos,ypos)
-                        print "UP"
                     else:
                         self.mouse.release(xpos,ypos)
-                        print "DOWN"
                     
                     self.downPressed = not self.downPressed
                     
@@ -153,17 +145,16 @@ class TrelloBoard(QtGui.QMainWindow):
         self.mainwidth = 1200
         self.mainheight = 800
 
-        self.currentCard = None
+        self.logo = QtGui.QLabel(self)
+        self.logo.setPixmap(QtGui.QPixmap(os.getcwd() + "/resources/trellol_logo_small.png"))
 
+        self.currentCard = None
+        
         self.initUI()
 
     def initUI(self):           
         self.setWindowTitle('Leap Motion + Trello')
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-               
-        img = QtGui.QLabel(self)
-        img.setGeometry(5, self.mainheight - 50 - 5, 200, 50)
-        img.setPixmap(QtGui.QPixmap(os.getcwd() + "/resources/trellol_logo_small.png"))
 
         layout = self.setContent(self.client)
         window = QtGui.QWidget();
@@ -217,6 +208,10 @@ class TrelloBoard(QtGui.QMainWindow):
         e.setDropAction(QtCore.Qt.MoveAction)
         e.accept()
 
+    def resizeEvent(self, e):
+        self.logo.setGeometry(5, self.height() - 50 - 5, 200, 50)
+        
+
 class TrelloCard(QtGui.QLabel):    
     def __init__(self, parent, id, name):
         QtGui.QLabel.__init__(self, parent)
@@ -250,17 +245,14 @@ class TrelloCard(QtGui.QLabel):
 
             drag = QtGui.QDrag(self)
             drag.setMimeData(mimeData)
-            drag.setPixmap(pixmap);
-            drag.setHotSpot(event.pos())
-            
-            dropAction = drag.start(QtCore.Qt.MoveAction)
+            drag.setPixmap(pixmap)
+            drag.setHotSpot(event.pos())        
+            drag.exec_(QtCore.Qt.MoveAction)
 
-        elif (self.parent.currentCard is not self): # TODO: assumes no buttons
-            self.parent.currentCard.deselect()
-            self.parent.currentCard = self
-            self.select()
-
-        return QtGui.QFrame.mouseMoveEvent(self, event)
+        if (self.parent.currentCard is not self):
+                self.parent.currentCard.deselect()
+                self.parent.currentCard = self
+                self.select()
 
     def mousePressEvent(self, event):
         QtGui.QLabel.mousePressEvent(self, event)
@@ -287,7 +279,6 @@ def main():
     app = QtGui.QApplication(sys.argv)
     client = TrelloClient()
     board = TrelloBoard(client, app)
-    app.installEventFilter(board) # TODO: ???
 
     listener = LeapListener()
     controller = Leap.Controller()
