@@ -152,18 +152,7 @@ class TrelloBoard(QtGui.QMainWindow):
         self.mainposy = 100
         self.mainwidth = 1200
         self.mainheight = 800
-        
-        # TODO: refactor layout system
-        self.col_dist = 350
-        self.row_dist = 50
-        self.x0 = 20
-        self.y0 = 20
 
-        self.cardWmargin = 30
-        self.cardHmargin = 30
-        self.cardwidth = 300
-        self.cardheight = 60
-        
         self.currentCard = None
 
         self.initUI()
@@ -197,7 +186,8 @@ class TrelloBoard(QtGui.QMainWindow):
     def setContent(self, client):
 
         grid = QtGui.QGridLayout()
-
+        grid.setHorizontalSpacing(20)
+        
         lists = client.getLists()
         for y in range(0, len(lists)):
             list = lists[y]
