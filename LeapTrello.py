@@ -21,6 +21,8 @@ from trolly.checklist import Checklist
 from trolly.member import Member
 from trolly import ResourceUnavailable
 
+# TODO: uniform name convention, underscores or camelcase
+
 class LeapListener(Leap.Listener):
 
     def __init__(self):
@@ -161,10 +163,6 @@ class TrelloBoard(QtGui.QMainWindow):
         window.setLayout(layout)
         self.setCentralWidget(window)
         
-        self.setWindowTitle('Leap Motion + Trello')
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-        self.setAcceptDrops(True)
-        
         self.center()
         self.show()
 
@@ -184,7 +182,6 @@ class TrelloBoard(QtGui.QMainWindow):
             cards = client.getCardsByList( list.id )
             hbox.addWidget( TrelloList( self, list.name, cards ) ) 
 
-        self.currentCard = None
         return hbox
         
     def keyPressEvent(self, event):
@@ -199,28 +196,19 @@ class TrelloBoard(QtGui.QMainWindow):
 
         return QtGui.QWidget.keyPressEvent(self, event)
 
-    def dragEnterEvent(self, e):  
-        e.accept()
-
-    def dropEvent(self, e):
-        position = e.pos()
-        e.source().move(position - e.source().rect().center())
-        e.setDropAction(QtCore.Qt.MoveAction)
-        e.accept()
-
     def resizeEvent(self, e):
         self.logo.setGeometry(5, self.height() - 50 - 5, 200, 50)
         
 
 class TrelloCard(QtGui.QLabel):    
-    def __init__(self, parent, id, name):
-        QtGui.QLabel.__init__(self, parent)
+    def __init__(self, tlist, id, name):
+        QtGui.QLabel.__init__(self)
         self.setText( "id: " + id + "\nname: " + name)
         self.colorDeselect = "#AAA"
         self.colorSelect = "#A44"
         self.deselect()
+        self.tlist = tlist
         self.setMouseTracking(True)
-        self.parent = parent
         self.setFixedHeight(80)
         
     def select(self):
@@ -239,6 +227,12 @@ class TrelloCard(QtGui.QLabel):
         return dist
 
     def mouseMoveEvent(self, event):
+        if (self.tlist.board.currentCard is not self):
+            if (self.tlist.board.currentCard is not None):
+                self.tlist.board.currentCard.deselect()
+            self.tlist.board.currentCard = self
+            self.select()
+
         if event.buttons() == QtCore.Qt.LeftButton:
             mimeData = QtCore.QMimeData()
             pixmap = QtGui.QPixmap.grabWidget(self)
@@ -249,11 +243,6 @@ class TrelloCard(QtGui.QLabel):
             drag.setHotSpot(event.pos())        
             drag.exec_(QtCore.Qt.MoveAction)
 
-        if (self.parent.currentCard is not self):
-                self.parent.currentCard.deselect()
-                self.parent.currentCard = self
-                self.select()
-
     def mousePressEvent(self, event):
         QtGui.QLabel.mousePressEvent(self, event)
 
@@ -262,26 +251,46 @@ class TrelloCard(QtGui.QLabel):
 
 
 class TrelloList(QtGui.QWidget):
-    def __init__(self, parent, name, cards):
+    def __init__(self, board, name, cards):
         QtGui.QWidget.__init__(self)
+        self.board = board
 
-        form = QtGui.QFormLayout()
-        form.addWidget(TrelloListHeader(parent, name))
-        form.addWidget(TrelloListCards(parent, cards))
-        self.setLayout(form)
+        self.form = QtGui.QFormLayout()
+        self.form.addWidget(TrelloListHeader(self, name))
+        self.form.addWidget(TrelloListCards(self, cards))
+        self.setLayout(self.form)
+        
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, e):          
+        self.board.currentCard.setParent(None)
+        self.form.addWidget(self.board.currentCard)
+        e.accept()
+
+    def dropEvent(self, e):
+        # Prettify the drop event
+        position = e.pos()
+        # e.source().move(position - e.source().rect().center())
+        e.setDropAction(QtCore.Qt.MoveAction)
+        e.accept()
+
 
 class TrelloListHeader(QtGui.QLabel):
-    def __init__(self, parent, text):
-        QtGui.QLabel.__init__(self, parent)
+    def __init__(self, tlist, text):
+        QtGui.QLabel.__init__(self)
+        self.tlist = tlist
+
         self.setText(text)
         self.setStyleSheet("QWidget { font: bold 15px }") 
 
 class TrelloListCards(QtGui.QWidget):
-    def __init__( self, parent, cards):
+    def __init__( self, tlist, cards):
         QtGui.QWidget.__init__(self)
+        self.tlist = tlist
+
         layout = QtGui.QFormLayout()
         for card in cards:
-            layout.addWidget(TrelloCard(parent, card.id, card.name))
+            layout.addWidget(TrelloCard(tlist, card.id, card.name))
         self.setLayout(layout)
 
 
