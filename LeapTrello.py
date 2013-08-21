@@ -150,44 +150,34 @@ class TrelloBoard(QtGui.QMainWindow):
         self.client = client
         self.initUI()
 
-    def initUI(self):           
+    def initUI(self):  
+        layout = self.setContent(self.client)
+
+        window = QtGui.QWidget();
+        window.setLayout(layout)
+        self.setCentralWidget(window)
+
         self.setWindowTitle('Leap Motion + Trello')
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.setAcceptDrops(True)
-        self.setContent(self.client)
-
+        
         self.center()
         self.show()
 
     def setContent(self, client):
 
-        x = self.x0
-        for list in client.getLists():
+        grid = QtGui.QGridLayout()
+
+        lists = client.getLists()
+        for y in range(0, len(lists)):
+            list = lists[y]
             cards = client.getCardsByList( list.id )
-            self.setListContent(x, self.y0, cards)
-            x += self.col_dist
 
-        #a = TrelloCard(self, 20, 20, '521349f9204ffcad710002c0', client)
-        #b = FakeTrelloCard(self, 20, 70)
-        #c = FakeTrelloCard(self, 20, 120)
-        #d = FakeTrelloCard(self, 20, 170)
-        #e = FakeTrelloCard(self, 20, 220)
-
-        #a = FakeTrelloCard(self, 350, 20)
-        #b = FakeTrelloCard(self, 350, 70)
-        #c = FakeTrelloCard(self, 350, 120)
-        #d = FakeTrelloCard(self, 350, 170)
-        #e = FakeTrelloCard(self, 350, 220)
-        #d = FakeTrelloCard(self, 350, 270)
-        #e = FakeTrelloCard(self, 350, 320)
-        #d = FakeTrelloCard(self, 350, 370)
-        #e = FakeTrelloCard(self, 350, 420)
-
-        #a = FakeTrelloCard(self, 680, 20)
-        #b = FakeTrelloCard(self, 680, 70)
-        #c = FakeTrelloCard(self, 680, 120)
-        #d = FakeTrelloCard(self, 680, 170)
-        #e = FakeTrelloCard(self, 680, 220)
+            for x in range(0, len(cards)):
+                card = cards[x]
+                grid.addWidget(TrelloCard(self, card.id, card.name), x, y)
+ 
+        return grid
 
     def setListContent( self, x, y, cards ):
         TrelloList( self, x, y, len( cards ) )
@@ -239,9 +229,8 @@ class FakeTrelloCard(QtGui.QFrame):
 
 
 class TrelloCard(QtGui.QLabel):    
-    def __init__(self, parent, xpos, ypos, id, name):
+    def __init__(self, parent, id, name):
         QtGui.QLabel.__init__(self, parent)
-        self.setGeometry(xpos, ypos, 300, 40)
         self.setText( "id: " + id + "\nname: " + name)
         self.col_deselect = "#AAA"
         self.col_select = "#A44"
