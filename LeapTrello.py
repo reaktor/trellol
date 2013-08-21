@@ -182,9 +182,9 @@ class TrelloBoard(QtGui.QMainWindow):
         for y in range(0, len(trello_lists)):
             list = trello_lists[y]
             cards = client.getCardsByList( list.id )
-            hbox.addLayout( TrelloList( self, list.name, cards ) ) 
+            hbox.addWidget( TrelloList( self, list.name, cards ) ) 
 
-        self.currentCard = hbox.itemAt(0).itemAt(1).widget()
+        self.currentCard = None
         return hbox
         
     def keyPressEvent(self, event):
@@ -261,19 +261,30 @@ class TrelloCard(QtGui.QLabel):
         return "Card @  %s" % (self.geometry())
 
 
-class TrelloList(QtGui.QFormLayout):
+class TrelloList(QtGui.QWidget):
     def __init__(self, parent, name, cards):
-        QtGui.QFormLayout.__init__(self)
-        self.addWidget( TrelloListHeader( parent, name ) )
-        for card in cards:
-            #TODO: parent
-            self.addWidget( TrelloCard( parent, card.id, card.name) )
+        QtGui.QWidget.__init__(self)
+
+        form = QtGui.QFormLayout()
+        form.addWidget(TrelloListHeader(parent, name))
+        form.addWidget(TrelloListCards(parent, cards))
+        self.setLayout(form)
 
 class TrelloListHeader(QtGui.QLabel):
     def __init__(self, parent, text):
         QtGui.QLabel.__init__(self, parent)
         self.setText(text)
-        self.setStyleSheet("QWidget { font: bold 15px }")
+        self.setStyleSheet("QWidget { font: bold 15px }") 
+
+class TrelloListCards(QtGui.QWidget):
+    def __init__( self, parent, cards):
+        QtGui.QWidget.__init__(self)
+        layout = QtGui.QFormLayout()
+        for card in cards:
+            layout.addWidget(TrelloCard(parent, card.id, card.name))
+        self.setLayout(layout)
+
+
 
 def main():    
     app = QtGui.QApplication(sys.argv)
