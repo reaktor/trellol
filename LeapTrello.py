@@ -67,15 +67,13 @@ class LeapListener(Leap.Listener):
             # TAP
             for gesture in frame.gestures():
                 if gesture.type == Leap.Gesture.TYPE_KEY_TAP:
-
                     if self.downPressed:
                         self.mouse.press(xpos,ypos)
                     else:
                         self.mouse.release(xpos,ypos)
                     
                     self.downPressed = not self.downPressed
-                    
-                    
+                                    
     def state_string(self, state):        
         if state == Leap.Gesture.STATE_START:
             return "STATE_START"
@@ -271,7 +269,7 @@ class TrelloList(QtGui.QWidget):
         e.accept()
 
     def dropEvent(self, e):
-        # Prettify the drop event
+        # TODO: Prettify the drop event
         position = e.pos()
         # e.source().move(position - e.source().rect().center())
         e.setDropAction(QtCore.Qt.MoveAction)
