@@ -68,7 +68,7 @@ class LeapListener(Leap.Listener):
             # TAP
             for gesture in frame.gestures():
                 if gesture.type == Leap.Gesture.TYPE_KEY_TAP:
-                    if self.downPressed:
+                    if not self.downPressed:
                         self.mouse.press(xpos,ypos)
                     else:
                         self.mouse.release(xpos,ypos)
@@ -231,6 +231,7 @@ class TrelloCard(QtGui.QLabel):
             self.tlist.board.currentCard = self
             self.select()
 
+        #TODO: QtCore.Qt.NoButton in OS X ???
         if event.buttons() == QtCore.Qt.LeftButton:
             mimeData = QtCore.QMimeData()
             pixmap = QtGui.QPixmap.grabWidget(self)
@@ -284,9 +285,9 @@ class TrelloListHeader(QtGui.QLabel):
     def __init__(self, tlist, text):
         QtGui.QLabel.__init__(self, tlist)
         self.tlist = tlist
-
         self.setText(text)
         self.setStyleSheet("QLabel { font: bold 15px; }") 
+        self.setFixedWidth(220)
 
 class TrelloListCards(QtGui.QWidget):
     def __init__( self, tlist, cards):
