@@ -11,6 +11,7 @@ import Leap, sys, os, math, collections
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 from pymouse import PyMouse
 from PyQt4 import QtGui, QtCore
+import time
 
 from trolly.client import Client
 from trolly.organisation import Organisation
@@ -147,8 +148,6 @@ class TrelloBoard(QtGui.QMainWindow):
 
         self.logo = QtGui.QLabel(self)
         self.logo.setPixmap(QtGui.QPixmap(os.getcwd() + "/resources/trellol_logo_small.png"))
-
-        self.currentCard = None
         
         self.initUI()
 
@@ -157,12 +156,7 @@ class TrelloBoard(QtGui.QMainWindow):
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.backgroundColor = "#1C678C"
         self.setStyleSheet("QMainWindow { background-color: %s }" % self.backgroundColor)
-
-        layout = self.setContent(self.client)
-        window = QtGui.QWidget();
-        window.setLayout(layout)
-        self.setCentralWidget(window)
-        
+        self.render() 
         self.center()
         self.show()
 
@@ -172,17 +166,19 @@ class TrelloBoard(QtGui.QMainWindow):
         size = self.geometry()
         self.move((screen.width() - size.width()) / 2, (screen.height() - size.height()) / 2)
 
-    def setContent(self, client):
+    def render(self):
         hbox = QtGui.QHBoxLayout()
+        hbox.setSpacing(0)
+        lists = self.client.getLists()
+        for trelloList in lists:
+            cards = self.client.getCardsByList( trelloList.id )
+            hbox.addWidget( TrelloList( self, self.client, trelloList.id, trelloList.name, cards ) ) 
 
-        trelloLists = client.getLists()
-        for y in range(0, len(trelloLists)):
-            trelloList = trelloLists[y]
-            cards = client.getCardsByList( trelloList.id )
-            hbox.addWidget( TrelloList( self, client, trelloList.id, trelloList.name, cards ) ) 
+        self.window = QtGui.QWidget();
+        self.window.setLayout(hbox)
+        self.setCentralWidget(self.window)
+        self.currentCard = None
 
-        return hbox
-        
     def keyPressEvent(self, event):
         key = event.key()
         if key == QtCore.Qt.Key_Escape:
@@ -197,7 +193,6 @@ class TrelloBoard(QtGui.QMainWindow):
 
     def resizeEvent(self, e):
         self.logo.setGeometry(5, self.height() - 50 - 5, 200, 50)
-        
 
 class TrelloCard(QtGui.QLabel):    
     def __init__(self, tlist, card_id, name):
@@ -211,8 +206,8 @@ class TrelloCard(QtGui.QLabel):
         self.deselect()
         self.tlist = tlist
         self.setMouseTracking(True)
-        self.setFixedHeight(60)
-        self.setFixedWidth(200)
+        self.setFixedHeight(80)
+        self.setFixedWidth(220)
 
     def select(self):
         self.setStyleSheet("QWidget { background-color: %s; border:1px solid %s; border-radius: 3px;}" % (self.backgroundColor,self.colorSelect))
@@ -271,16 +266,16 @@ class TrelloList(QtGui.QWidget):
         layout.setHorizontalSpacing(0)
         layout.setContentsMargins(0,0,0,0)
 
-    def dragEnterEvent(self, e):          
+    def dragEnterEvent(self, e): 
         self.board.currentCard.setParent(None)
         self.form.addWidget(self.board.currentCard)
         e.accept()
 
     def dropEvent(self, e):
         # TODO: Prettify the drop event
-        position = e.pos()
-       # self.client.putCardToList( e.source().id, self.id)
-        
+        self.client.putCardToList( e.source().id, self.id)
+
+        #position = e.pos()        
         # e.source().move(position - e.source().rect().center())
         e.setDropAction(QtCore.Qt.MoveAction)
         e.accept()
@@ -310,10 +305,23 @@ class TrelloListCards(QtGui.QWidget):
         layout.setHorizontalSpacing(0)
         layout.setContentsMargins(0,0,0,0)
 
+class WorkThread(QtCore.QThread):
+    def __init__(self):
+        QtCore.QThread.__init__(self)
+  
+    def run(self):
+        while(True):
+            time.sleep(5)
+            self.emit(QtCore.SIGNAL('update()'))
+
 def main():    
     app = QtGui.QApplication(sys.argv)
     client = TrelloClient()
     board = TrelloBoard(client, app)
+
+    #workThread = WorkThread()
+    #QtCore.QObject.connect( workThread, QtCore.SIGNAL("update()"), board.render)
+    #workThread.start()
 
     listener = LeapListener()
     controller = Leap.Controller()
