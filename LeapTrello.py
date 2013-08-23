@@ -199,7 +199,8 @@ class TrelloCard(QtGui.QLabel):
         QtGui.QLabel.__init__(self)
         self.id = card_id
         self.name = name
-        self.setText("id: %s \nname: %s" % (card_id, name))
+        self.setText(name)
+        self.setAlignment(QtCore.Qt.AlignCenter)
         self.backgroundColor = "#FFF"
         self.colorDeselect = "#FFF"
         self.colorSelect = "#949494"
@@ -210,10 +211,10 @@ class TrelloCard(QtGui.QLabel):
         self.setFixedWidth(220)
 
     def select(self):
-        self.setStyleSheet("QWidget { background-color: %s; border:1px solid %s; border-radius: 3px;}" % (self.backgroundColor,self.colorSelect))
+        self.setStyleSheet("QWidget { font: 20px; background-color: %s; border:1px solid %s; border-radius: 3px;}" % (self.backgroundColor,self.colorSelect))
 
     def deselect(self):
-        self.setStyleSheet("QWidget { background-color: %s; border:1px solid %s; border-radius: 3px;}" % (self.backgroundColor,self.colorDeselect))
+        self.setStyleSheet("QWidget { font: 20px; background-color: %s; border:1px solid %s; border-radius: 3px;}" % (self.backgroundColor,self.colorDeselect))
 
     def getCentroid(self):
         x,y,w,h = self.x(), self.y(), self.width(), self.height()
