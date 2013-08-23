@@ -154,7 +154,7 @@ class TrelloBoard(QtGui.QMainWindow):
     def initUI(self):           
         self.setWindowTitle('Leap Motion + Trello')
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-        self.backgroundColor = "#1C678C"
+        self.backgroundColor = "#B8C0CC"
         self.setStyleSheet("QMainWindow { background-color: %s }" % self.backgroundColor)
         self.render() 
         self.center()
@@ -201,9 +201,9 @@ class TrelloCard(QtGui.QLabel):
         self.name = name
         self.setText(name)
         self.setAlignment(QtCore.Qt.AlignCenter)
-        self.backgroundColor = "#FFF"
+        self.borderColor = "#000000"
         self.colorDeselect = "#FFF"
-        self.colorSelect = "#949494"
+        self.colorSelect = "#4675E3"
         self.deselect()
         self.tlist = tlist
         self.setMouseTracking(True)
@@ -211,10 +211,10 @@ class TrelloCard(QtGui.QLabel):
         self.setFixedWidth(220)
 
     def select(self):
-        self.setStyleSheet("QWidget { font: 20px; background-color: %s; border:1px solid %s; border-radius: 3px;}" % (self.backgroundColor,self.colorSelect))
+        self.setStyleSheet("QWidget { font: 20px; color: white; background-color: %s; border:2px solid %s; border-radius: 3px;}" % (self.colorSelect, self.borderColor))
 
     def deselect(self):
-        self.setStyleSheet("QWidget { font: 20px; background-color: %s; border:1px solid %s; border-radius: 3px;}" % (self.backgroundColor,self.colorDeselect))
+        self.setStyleSheet("QWidget { font: 20px; background-color: %s; border:1px solid %s; border-radius: 3px;}" % (self.colorDeselect,self.borderColor))
 
     def getCentroid(self):
         x,y,w,h = self.x(), self.y(), self.width(), self.height()
@@ -289,6 +289,7 @@ class TrelloListHeader(QtGui.QLabel):
         self.setText(text)
         self.setStyleSheet("QLabel { font: bold 15px; }") 
         self.setFixedWidth(220)
+        self.setFixedHeight(70)
 
 class TrelloListCards(QtGui.QWidget):
     def __init__( self, tlist, cards):
