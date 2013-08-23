@@ -12,66 +12,24 @@ from PyQt4 import QtGui, QtCore
 from LeapListener import LeapListener
 
 from trolly.client import Client
-from trolly.organisation import Organisation
 from trolly.board import Board
 from trolly.list import List
 from trolly.card import Card
-from trolly.checklist import Checklist
-from trolly.member import Member
-from trolly import ResourceUnavailable
-
-class TrelloClient:
-
-    api_key = 'cae2c8a0e8fff08a3031310959cb94c8'
-    user_auth_token = '9bbf9f6e2b89d7c098eca47f2265609ee4c04fb317e6f1da1c2ffd5b0daba448'
-    board_id = '52120adfbcec5a8c6a0018a8'
-    card_id = '521349f9204ffcad710002c0'
-    list_id = '52120adfbcec5a8c6a0018ab'
-    client = Client( api_key, user_auth_token )
-
-    def __init__( self ) :
-        print("Initialized Trello Client...")
-
-    def getCardInformation( self, card_id, query_params = {} ):
-        return MyCard( self.client, card_id ).getCardInformation(query_params)
-
-    def getCards( self ):
-        board = Board( self.client, self.board_id)
-        return board.getCards()
-
-    def getLists( self ):
-        board = Board( self.client, self.board_id)
-        return board.getLists()
-
-    def getCardsByList( self, list_id ):
-        list = List( self.client, list_id )
-        return list.getCards()
- 
-    def putCardToList( self, card_id, list_id ):
-        card = MyCard( self.client, card_id)
-        card.putToList({ 'value' : list_id })
-    
-
-class MyCard( Card ):
-
-    def __init__( self, trello_client, card_id, name = '' ):
-        super( MyCard, self ).__init__( trello_client, card_id, name )
-
-    def putToList( self, query_params = {} ):
-        card_json = self.fetchJson(
-            uri_path = self.base_uri + '/idList',
-            http_method = 'PUT',
-            query_params = query_params
-        )
-        return self.createCard( card_json )
+# from trolly.organisation import Organisation
+# from trolly.checklist import Checklist
+# from trolly.member import Member
+# from trolly import ResourceUnavailable
 
 class TrelloBoard(QtGui.QMainWindow):  
-    def __init__(self, client, app):
+    def __init__(self, client, app, boardId):
         QtGui.QMainWindow.__init__(self)
 
         self.lists = []
         self.app = app
         self.client = client
+        self.boardId = boardId
+
+        self.board = Board(client, boardId)
 
         self.mainposx = 100
         self.mainposy = 100
@@ -101,10 +59,10 @@ class TrelloBoard(QtGui.QMainWindow):
     def render(self):
         hbox = QtGui.QHBoxLayout()
         hbox.setSpacing(0)
-        lists = self.client.getLists()
-        for trelloList in lists:
-            cards = self.client.getCardsByList( trelloList.id )
-            hbox.addWidget( TrelloList( self, self.client, trelloList.id, trelloList.name, cards ) ) 
+        lists = self.board.getLists()
+        for rawlist in lists:            
+            cards = rawlist.getCards()
+            hbox.addWidget( TrelloList( self, self.client, rawlist.id, rawlist.name, cards ) ) 
 
         self.window = QtGui.QWidget();
         self.window.setLayout(hbox)
@@ -206,10 +164,10 @@ class TrelloList(QtGui.QWidget):
         e.accept()
 
     def dropEvent(self, e):
-        # TODO: Prettify the drop event
-        self.client.putCardToList( e.source().id, self.id)
+        Card(self.client, e.source().id).updateCard({ 'idList' : self.id})
 
-        #position = e.pos()        
+        # TODO: Prettify the drop event
+        # position = e.pos()        
         # e.source().move(position - e.source().rect().center())
         e.setDropAction(QtCore.Qt.MoveAction)
         e.accept()
@@ -250,9 +208,14 @@ class WorkThread(QtCore.QThread):
             self.emit(QtCore.SIGNAL('update()'))
 
 def main():    
+    apiKey = 'cae2c8a0e8fff08a3031310959cb94c8'
+    userAuthToken = '9bbf9f6e2b89d7c098eca47f2265609ee4c04fb317e6f1da1c2ffd5b0daba448'
+    client = Client(apiKey, userAuthToken)
+
     app = QtGui.QApplication(sys.argv)
-    client = TrelloClient()
-    board = TrelloBoard(client, app)
+
+    boardId = '52120adfbcec5a8c6a0018a8'
+    board = TrelloBoard(client, app, boardId)
 
     #workThread = WorkThread()
     #QtCore.QObject.connect( workThread, QtCore.SIGNAL("update()"), board.render)
