@@ -225,7 +225,6 @@ class TrelloListCards(QtGui.QWidget):
 
         layout = QtGui.QFormLayout()
         for card in cards:
-            print card.getCardInformation()
             layout.addWidget(TrelloCard(tlist, card.id, card.name))
         self.setLayout(layout)
         
