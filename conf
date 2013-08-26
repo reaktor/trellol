@@ -1,0 +1,33 @@
+[main]
+api_key = cae2c8a0e8fff08a3031310959cb94c8
+user_token = 9bbf9f6e2b89d7c098eca47f2265609ee4c04fb317e6f1da1c2ffd5b0daba448
+board_id = 52120adfbcec5a8c6a0018a8
+title = Leap Motion + Trello
+pos_x = 100
+pos_y = 100
+width = 1200
+height = 800
+
+[resources]
+trellol_logo_small = /resources/trellol_logo_small.png
+ball_cursor = /resources/BallCursor.png
+null_cursor = /resources/NullCursor.png
+
+[TrelloBoard]
+background_color = #B8C0CC
+style = QMainWindow { background-color: %(background_color)s; }
+logo_pos_x = 5
+logo_width = 200
+logo_height = 50
+
+[TrelloCard]
+deselect_style = TrelloCard { font: 20px; background-color: #FFF; border:1px solid #000; border-radius: 3px;}
+select_style = TrelloCard { font: 20px; color:white; background-color: #4675E3; border:2px solid #000; border-radius:3px;}
+width = 220
+height = 80
+
+[TrelloListHeader]
+style = QLabel { font: bold 15px; }
+
+[TrelloListCards]
+style = QLabel { font: bold 15px; }

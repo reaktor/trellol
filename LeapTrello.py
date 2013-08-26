@@ -20,13 +20,13 @@ from trolly.card import Card
 # from trolly.member import Member
 # from trolly import ResourceUnavailable
 
-BG_GRAY="#B8C0CC"
-TRELLO_BLUE="#1C678C"
+import ConfigParser
 
-
+config = ConfigParser.ConfigParser()
+config.read('conf')
+    
 class TrelloBoard(QtGui.QMainWindow):  
-    TrelloBoardStyle=\
-        "QMainWindow { background-color: %s; }" % (BG_GRAY)
+    TrelloBoardStyle=config.get('TrelloBoard', 'style')
 
     def __init__(self, client, app, boardId):
         QtGui.QMainWindow.__init__(self)
@@ -43,24 +43,24 @@ class TrelloBoard(QtGui.QMainWindow):
         self.show()
 
     def style(self):           
-        self.setWindowTitle('Leap Motion + Trello')
+        self.setWindowTitle(config.get('main', 'title'))
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.setStyleSheet(self.TrelloBoardStyle)        
 
         self.logo = QtGui.QLabel(self)
-        self.logo.setPixmap(QtGui.QPixmap(os.getcwd() + "/resources/trellol_logo_small.png"))
-
+        self.logo.setPixmap(QtGui.QPixmap(os.getcwd() + config.get('resources', 'trellol_logo_small')))
+        
         self.cursorImg = QtGui.QPixmap(os.getcwd() + "/resources/BallCursor.png")
-        #self.cursorImg = QtGui.QPixmap(os.getcwd() + "/resources/NullCursor.png")
+        #self.cursorImg = QtGui.QPixmap(os.getcwd() + config.get('resources', 'null_cursor'))
         self.setCursor(QtGui.QCursor(self.cursorImg, -1, -1))
         
         self.center()
 
     def center(self):
-        mainposx = 100 #TODO conf file
-        mainposy = 100
-        mainwidth = 1200
-        mainheight = 800
+        mainposx = config.getint('main', 'pos_x')
+        mainposy = config.getint('main', 'pos_y')
+        mainwidth = config.getint('main', 'width')
+        mainheight = config.getint('main', 'height')
 
         screen = QtGui.QDesktopWidget().screenGeometry()
         self.setGeometry(mainposx, mainposy, mainwidth, mainheight)        
@@ -93,16 +93,19 @@ class TrelloBoard(QtGui.QMainWindow):
         return QtGui.QWidget.keyPressEvent(self, event)
 
     def resizeEvent(self, e):
-        # TODO conf file
-        self.logo.setGeometry(5, self.height() - 50 - 5, 200, 50)
-
+        self.logo.setGeometry(
+            config.getint('TrelloBoard', 'logo_pos_x'), 
+            config.getint('main', 'height') - config.getint('TrelloBoard', 'logo_height') - config.getint('TrelloBoard', 'logo_pos_x'), 
+            config.getint('TrelloBoard', 'logo_width'), 
+            config.getint('TrelloBoard', 'logo_height')
+        )
 
 class TrelloList(QtGui.QWidget):
-    def __init__(self, board, client, list_id, name, cards):
+    def __init__(self, board, client, listId, name, cards):
         QtGui.QWidget.__init__(self)
         self.board = board
         self.client = client
-        self.id = list_id
+        self.id = listId
         self.name = name
 
         layout = QtGui.QFormLayout()
@@ -120,7 +123,7 @@ class TrelloList(QtGui.QWidget):
 
     def dragEnterEvent(self, e): 
         self.board.currentCard.setParent(None)
-        self.form.addWidget(self.board.currentCard)
+        self.layout().addWidget(self.board.currentCard)
         e.accept()
 
     def dropEvent(self, e):
@@ -135,19 +138,18 @@ class TrelloList(QtGui.QWidget):
 
 
 class TrelloCard(QtGui.QLabel):
-    # TODO conf file    
-    TrelloCardDeselectStyle=\
-        "TrelloCard { font: 20px; background-color: #FFF; border:1px solid #000; border-radius: 3px;}"
-    
-    TrelloCardSelectStyle=\
-        "TrelloCard { font: 20px; color:white; background-color: #4675E3; border:2px solid #000; border-radius:3px;}"
+
+    TrelloCardDeselectStyle=config.get('TrelloCard', 'deselect_style')
+    TrelloCardSelectStyle=config.get('TrelloCard', 'select_style')
+    TrelloCardWidth = config.getint('TrelloCard', 'width')
+    TrelloCardHeight = config.getint('TrelloCard', 'height')
 
     def __init__(self, tlist, card_id, name):
         QtGui.QLabel.__init__(self)
         self.id = card_id
         self.name = name
         self.tlist = tlist
-
+        
         self.setText(name)
         self.setMouseTracking(True)
 
@@ -156,8 +158,8 @@ class TrelloCard(QtGui.QLabel):
     def style(self):
         self.setAlignment(QtCore.Qt.AlignCenter)
         self.deselect()
-        self.setFixedHeight(80)
-        self.setFixedWidth(220)
+        self.setFixedHeight(self.TrelloCardHeight)
+        self.setFixedWidth(self.TrelloCardWidth)
         
     def select(self):
         self.setStyleSheet(self.TrelloCardSelectStyle)
@@ -199,7 +201,7 @@ class TrelloCard(QtGui.QLabel):
 
 
 class TrelloListHeader(QtGui.QLabel):
-    TrelloListHeaderStyle="QLabel { font: bold 15px; }"
+    TrelloListHeaderStyle=config.get('TrelloListHeader', 'style')
 
     def __init__(self, text):
         QtGui.QLabel.__init__(self)
@@ -217,7 +219,7 @@ class TrelloListHeader(QtGui.QLabel):
 
 
 class TrelloListCards(QtGui.QWidget):
-    TrelloListCardsStyle="QLabel { font: bold 15px; }"
+    TrelloListCardsStyle=config.get('TrelloListCards', 'style')
 
     def __init__( self, tlist, cards):
         QtGui.QWidget.__init__(self, tlist)
@@ -240,7 +242,6 @@ class TrelloListCards(QtGui.QWidget):
         pass # TODO: correct position (cf. Trello API)
 
 
-
 class WorkThread(QtCore.QThread):
     def __init__(self):
         QtCore.QThread.__init__(self)
@@ -252,13 +253,13 @@ class WorkThread(QtCore.QThread):
 
 
 def main():    
-    apiKey = 'cae2c8a0e8fff08a3031310959cb94c8' # TODO conf file
-    userAuthToken = '9bbf9f6e2b89d7c098eca47f2265609ee4c04fb317e6f1da1c2ffd5b0daba448'
+    apiKey =  config.get('main', 'api_key')
+    userAuthToken = config.get('main', 'user_token')
     client = Client(apiKey, userAuthToken)
 
     app = QtGui.QApplication(sys.argv)
 
-    boardId = '52120adfbcec5a8c6a0018a8' # TODO conf file
+    boardId = config.get('main', 'board_id')
     board = TrelloBoard(client, app, boardId)
 
     #workThread = WorkThread()
