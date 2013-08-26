@@ -38,6 +38,7 @@ class TrelloBoard(QtGui.QMainWindow):
 
         self.board = Board(client, boardId)
 
+        self.setMouseTracking(True)
         self.render()
         self.style()
         self.show()
@@ -50,7 +51,7 @@ class TrelloBoard(QtGui.QMainWindow):
         self.logo = QtGui.QLabel(self)
         self.logo.setPixmap(QtGui.QPixmap(os.getcwd() + config.get('resources', 'trellol_logo_small')))
         
-        self.cursorImg = QtGui.QPixmap(os.getcwd() + "/resources/BallCursor.png")
+        self.cursorImg = QtGui.QPixmap(os.getcwd() + config.get('resources', 'ball_cursor'))
         #self.cursorImg = QtGui.QPixmap(os.getcwd() + config.get('resources', 'null_cursor'))
         self.setCursor(QtGui.QCursor(self.cursorImg, -1, -1))
         
@@ -99,6 +100,16 @@ class TrelloBoard(QtGui.QMainWindow):
             config.getint('TrelloBoard', 'logo_width'), 
             config.getint('TrelloBoard', 'logo_height')
         )
+
+
+    def mouseMoveEvent(self, event):
+        if (self.currentCard is not None):
+            TrelloCard.mouseMoveEvent(self.currentCard, event) 
+
+    def mousePressEvent(self, event):
+        if (self.currentCard is not None):
+            TrelloCard.mousePressEvent(self.currentCard, event)
+
 
 class TrelloList(QtGui.QWidget):
     def __init__(self, board, client, listId, name, cards):
@@ -150,9 +161,8 @@ class TrelloCard(QtGui.QLabel):
         self.name = name
         self.tlist = tlist
         
-        self.setText(name)
         self.setMouseTracking(True)
-
+        self.setText(name)
         self.style()
 
     def style(self):
@@ -186,10 +196,8 @@ class TrelloCard(QtGui.QLabel):
         #TODO: QtCore.Qt.NoButton in OS X ???
         if not event.buttons() == QtCore.Qt.NoButton: #QtCore.Qt.LeftButton:
             mimeData = QtCore.QMimeData()
-            pixmap = QtGui.QPixmap.grabWidget(self)
             drag = QtGui.QDrag(self)
             drag.setMimeData(mimeData)
-            drag.setPixmap(pixmap)
             drag.setHotSpot(event.pos())        
             drag.exec_(QtCore.Qt.MoveAction)
 
