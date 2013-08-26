@@ -79,6 +79,8 @@ class TrelloBoard(QtGui.QMainWindow):
         self.window = QtGui.QWidget();
         self.window.setLayout(hbox)
         self.setCentralWidget(self.window)
+
+        #print hbox.itemAt(0).widget().layout().itemAt(1).widget().layout().itemAt(1).widget()
         self.currentCard = None
 
     def keyPressEvent(self, event):
@@ -135,6 +137,7 @@ class TrelloList(QtGui.QWidget):
     def dragEnterEvent(self, e): 
         self.board.currentCard.setParent(None)
         self.layout().addWidget(self.board.currentCard)
+        e.source().drag()
         e.accept()
 
     def dropEvent(self, e):
@@ -144,6 +147,7 @@ class TrelloList(QtGui.QWidget):
         # TODO: Prettify the drop event
         # position = e.pos()        
         # e.source().move(position - e.source().rect().center())
+        e.source().select()
         e.setDropAction(QtCore.Qt.MoveAction)
         e.accept()
 
@@ -152,6 +156,7 @@ class TrelloCard(QtGui.QLabel):
 
     TrelloCardDeselectStyle=config.get('TrelloCard', 'deselect_style')
     TrelloCardSelectStyle=config.get('TrelloCard', 'select_style')
+    TrelloCardDragStyle=config.get('TrelloCard', 'drag_style')
     TrelloCardWidth = config.getint('TrelloCard', 'width')
     TrelloCardHeight = config.getint('TrelloCard', 'height')
 
@@ -177,6 +182,9 @@ class TrelloCard(QtGui.QLabel):
     def deselect(self):
         self.setStyleSheet(self.TrelloCardDeselectStyle)
 
+    def drag(self):
+        self.setStyleSheet(self.TrelloCardDragStyle)
+
     def getCentroid(self):
         x,y,w,h = self.x(), self.y(), self.width(), self.height()
         return (x + (w/2), y + (h/2))
@@ -196,6 +204,7 @@ class TrelloCard(QtGui.QLabel):
         #TODO: QtCore.Qt.NoButton in OS X ???
         if not event.buttons() == QtCore.Qt.NoButton: #QtCore.Qt.LeftButton:
             mimeData = QtCore.QMimeData()
+            #self.drag()
             drag = QtGui.QDrag(self)
             drag.setMimeData(mimeData)
             drag.setHotSpot(event.pos())        
