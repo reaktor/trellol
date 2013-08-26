@@ -105,17 +105,18 @@ class TrelloList(QtGui.QWidget):
         self.id = list_id
         self.name = name
 
-        self.form = QtGui.QFormLayout()
-        self.form.addWidget(TrelloListHeader(self.name))
-        self.form.addWidget(TrelloListCards(self, cards))
-        self.setPadding(self.form)
+        layout = QtGui.QFormLayout()
+        layout.addWidget(TrelloListHeader(self.name))
+        layout.addWidget(TrelloListCards(self, cards))
+        self.setLayout(layout)
 
-        self.setLayout(self.form)
+        self.style()
+        
         self.setAcceptDrops(True)
 
-    def setPadding(self, layout):
-        layout.setHorizontalSpacing(0)
-        layout.setContentsMargins(0,0,0,0)
+    def style(self):
+        self.layout().setHorizontalSpacing(0)
+        self.layout().setContentsMargins(0,0,0,0)        
 
     def dragEnterEvent(self, e): 
         self.board.currentCard.setParent(None)
@@ -224,15 +225,20 @@ class TrelloListCards(QtGui.QWidget):
 
         layout = QtGui.QFormLayout()
         for card in cards:
+            print card.getCardInformation()
             layout.addWidget(TrelloCard(tlist, card.id, card.name))
         self.setLayout(layout)
         
         self.style()
 
     def style(self):
-        self.setStyleSheet(self.TrelloListCardsStyle) 
         self.layout().setHorizontalSpacing(0)
         self.layout().setContentsMargins(0,0,0,0)
+        self.setStyleSheet(self.TrelloListCardsStyle) 
+        
+    def addCard(self):
+        pass # TODO: correct position (cf. Trello API)
+
 
 
 class WorkThread(QtCore.QThread):
