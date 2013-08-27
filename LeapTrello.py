@@ -16,9 +16,9 @@ from trolly.client import Client
 from trolly.board import Board
 from trolly.list import List
 from trolly.card import Card
+from trolly.member import Member
 # from trolly.organisation import Organisation
 # from trolly.checklist import Checklist
-from trolly.member import Member
 # from trolly import ResourceUnavailable
 
 import ConfigParser
@@ -152,14 +152,16 @@ class TrelloList(QtGui.QWidget):
         e.accept()
 
     def dragMoveEvent(self, e):
+        # HACK: we compute a limit for the end of the card list and 
+        #       consider a tail move only when in the end
         h = config.getint('TrelloCard', 'height') + 5
-        print e.pos(), self.tail.layout().count(), self.tail.layout().count()*h
-        print self
-        # self.board.currentCard.setParent(None)
-        # self.layout().addWidget(self.board.currentCard)
-        # e.source().drag()
-        # e.accept()
-
+        lim = h * self.tail.layout().count()
+        if lim > e.pos().y():
+            e.accept()
+            return
+        
+        # TODO: dragMove
+        
 #     def dropEvent(self, e):
 #         cardUpdate = UpdateThread(self.client, e.source().id, { 'idList' : self.id })
 #         cardUpdate.start()
@@ -268,7 +270,6 @@ class TrelloCard(QtGui.QLabel):
             if (cardlist.getCardAt(i) == self):
                 if uphalf: temp.append(cardlist.takeCardAt(i))
                 cardlist.addCard(e.source())
-                cardlist.pretty()
                 if not uphalf: temp.append(cardlist.takeCardAt(i))                
                 break
             else:                
@@ -345,9 +346,6 @@ class TrelloListCards(QtGui.QWidget):
         card.setTrellolist(self.tlist)
         self.layout().addWidget(card)
 
-    def pretty(self):
-        for i in range(self.layout().count()):
-            print self.layout().itemAt(i).widget()
 
 class UpdateThread(QtCore.QThread):
     def __init__(self, client, cardId, queryParams = {}):
