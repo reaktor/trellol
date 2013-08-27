@@ -20,10 +20,14 @@ logo_pos_x = 5
 logo_width = 200
 logo_height = 50
 
+[TrelloList]
+thin_style = TrelloList { padding: 25px; margin: 25px; border: 0; }
+
 [TrelloCard]
-deselect_style = TrelloCard { font: 20px; background-color: #FFF; border:1px solid #000; border-radius: 3px;}
+deselect_style = TrelloCard { font: 20px; background-color: #FFF; border:1px solid #000; border-radius: 3px; margin: 0; padding: 0; }
 select_style = TrelloCard { font: 20px; color:white; background-color: #4675E3; border:2px solid #000; border-radius:3px;}
 drag_style = TrelloCard { font: 20px; color:white; background-color: #33CC33; border:2px solid #000; border-radius:3px;}
+shadow_style = TrelloCard { color: gray; background-color: gray; border:2px solid gray; border-radius:3px;}
 width = 220
 height = 80
 
@@ -31,4 +35,4 @@ height = 80
 style = QLabel { font: bold 15px; }
 
 [TrelloListCards]
-style = QLabel { font: bold 15px; }
+style = TrelloListCards { font: bold 15px; margin: 0; padding: 0; border: 0; }
