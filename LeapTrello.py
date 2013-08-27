@@ -17,7 +17,7 @@ from trolly.list import List
 from trolly.card import Card
 # from trolly.organisation import Organisation
 # from trolly.checklist import Checklist
-#from trolly.member import Member
+from trolly.member import Member
 # from trolly import ResourceUnavailable
 
 import ConfigParser
@@ -37,6 +37,7 @@ class TrelloBoard(QtGui.QMainWindow):
 
         self.board = Board(client, boardId)
         self.setMouseTracking(True)
+
         self.render()
         self.style()
         self.show()
@@ -141,8 +142,9 @@ class TrelloList(QtGui.QWidget):
         e.accept()
 
     def dropEvent(self, e):
-        # TODO Make async
-        Card(self.client, e.source().id).updateCard({ 'idList' : self.id})
+        cardUpdate = UpdateThread(self.client, e.source().id, { 'idList' : self.id })
+        cardUpdate.start()
+
         # TODO: Prettify the drop event
         # position = e.pos()        
         # e.source().move(position - e.source().rect().center())
@@ -262,14 +264,15 @@ class TrelloListCards(QtGui.QWidget):
         pass # TODO: correct position (cf. Trello API)
 
 
-class WorkThread(QtCore.QThread):
-    def __init__(self):
+class UpdateThread(QtCore.QThread):
+    def __init__(self, client, cardId, queryParams = {}):
         QtCore.QThread.__init__(self)
+        self.client = client
+        self.cardId = cardId
+        self.queryParams = queryParams
   
     def run(self):
-        while(True):
-            time.sleep(5)
-            self.emit(QtCore.SIGNAL('update()'))
+        Card(self.client, self.cardId).updateCard(self.queryParams)
 
 
 def main():    
@@ -281,10 +284,6 @@ def main():
 
     boardId = config.get('main', 'board_id')
     board = TrelloBoard(client, app, boardId)
-
-    #workThread = WorkThread()
-    #QtCore.QObject.connect( workThread, QtCore.SIGNAL("update()"), board.render)
-    #workThread.start()
 
     listener = LeapListener()
     controller = Leap.Controller()
