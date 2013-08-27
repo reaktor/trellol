@@ -17,11 +17,10 @@ from trolly.list import List
 from trolly.card import Card
 # from trolly.organisation import Organisation
 # from trolly.checklist import Checklist
-# from trolly.member import Member
+#from trolly.member import Member
 # from trolly import ResourceUnavailable
 
 import ConfigParser
-
 config = ConfigParser.ConfigParser()
 config.read('conf')
     
@@ -37,7 +36,6 @@ class TrelloBoard(QtGui.QMainWindow):
         self.boardId = boardId
 
         self.board = Board(client, boardId)
-
         self.setMouseTracking(True)
         self.render()
         self.style()
@@ -51,8 +49,8 @@ class TrelloBoard(QtGui.QMainWindow):
         self.logo = QtGui.QLabel(self)
         self.logo.setPixmap(QtGui.QPixmap(os.getcwd() + config.get('resources', 'trellol_logo_small')))
         
-        self.cursorImg = QtGui.QPixmap(os.getcwd() + config.get('resources', 'ball_cursor'))
-        #self.cursorImg = QtGui.QPixmap(os.getcwd() + config.get('resources', 'null_cursor'))
+        #self.cursorImg = QtGui.QPixmap(os.getcwd() + config.get('resources', 'ball_cursor'))
+        self.cursorImg = QtGui.QPixmap(os.getcwd() + config.get('resources', 'null_cursor'))
         self.setCursor(QtGui.QCursor(self.cursorImg, -1, -1))
         
         self.center()
@@ -76,11 +74,14 @@ class TrelloBoard(QtGui.QMainWindow):
             cards = rawlist.getCards()
             hbox.addWidget( TrelloList( self, self.client, rawlist.id, rawlist.name, cards ) ) 
 
-        self.window = QtGui.QWidget();
+        self.window = QtGui.QWidget()
         self.window.setLayout(hbox)
-        self.setCentralWidget(self.window)
 
-        #print hbox.itemAt(0).widget().layout().itemAt(1).widget().layout().itemAt(1).widget()
+        self.scrollArea = QtGui.QScrollArea()
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setEnabled(True)
+        self.scrollArea.setWidget(self.window)
+        self.setCentralWidget(self.scrollArea)
         self.currentCard = None
 
     def keyPressEvent(self, event):
@@ -102,7 +103,6 @@ class TrelloBoard(QtGui.QMainWindow):
             config.getint('TrelloBoard', 'logo_width'), 
             config.getint('TrelloBoard', 'logo_height')
         )
-
 
     def mouseMoveEvent(self, event):
         if (self.currentCard is not None):
@@ -143,7 +143,6 @@ class TrelloList(QtGui.QWidget):
     def dropEvent(self, e):
         # TODO Make async
         Card(self.client, e.source().id).updateCard({ 'idList' : self.id})
-
         # TODO: Prettify the drop event
         # position = e.pos()        
         # e.source().move(position - e.source().rect().center())
@@ -160,15 +159,18 @@ class TrelloCard(QtGui.QLabel):
     TrelloCardWidth = config.getint('TrelloCard', 'width')
     TrelloCardHeight = config.getint('TrelloCard', 'height')
 
-    def __init__(self, tlist, card_id, name):
+    def __init__(self, tlist, card):
         QtGui.QLabel.__init__(self)
-        self.id = card_id
-        self.name = name
+        self.id = card.id
+        self.name = card.name
         self.tlist = tlist
         
         self.setMouseTracking(True)
-        self.setText(name)
+        self.setText(self.name)
         self.style()
+        #idMembers = card.getCardInformation()['idMembers']
+        #for idMember in idMembers:
+        #    print Member(self.tlist.board.client, idMember).getMemberInformation()['fullName']
 
     def style(self):
         self.setAlignment(QtCore.Qt.AlignCenter)
@@ -204,8 +206,10 @@ class TrelloCard(QtGui.QLabel):
         #TODO: QtCore.Qt.NoButton in OS X ???
         if not event.buttons() == QtCore.Qt.NoButton: #QtCore.Qt.LeftButton:
             mimeData = QtCore.QMimeData()
-            #self.drag()
+            
             drag = QtGui.QDrag(self)
+            dragCursor = QtGui.QPixmap(os.getcwd() + config.get('resources', 'null_cursor'))
+            drag.setDragCursor(dragCursor, QtCore.Qt.MoveAction)
             drag.setMimeData(mimeData)
             drag.setHotSpot(event.pos())        
             drag.exec_(QtCore.Qt.MoveAction)
@@ -244,7 +248,7 @@ class TrelloListCards(QtGui.QWidget):
 
         layout = QtGui.QFormLayout()
         for card in cards:
-            layout.addWidget(TrelloCard(tlist, card.id, card.name))
+            layout.addWidget(TrelloCard(tlist, card))
         self.setLayout(layout)
         
         self.style()

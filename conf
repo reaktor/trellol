@@ -15,7 +15,7 @@ null_cursor = /resources/NullCursor.png
 
 [TrelloBoard]
 background_color = #B8C0CC
-style = QMainWindow { background-color: %(background_color)s; }
+style = QWidget { background-color: %(background_color)s; }
 logo_pos_x = 5
 logo_width = 200
 logo_height = 50
