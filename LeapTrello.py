@@ -166,13 +166,6 @@ class TrelloList(QtGui.QWidget):
 #         cardUpdate = UpdateThread(self.client, e.source().id, { 'idList' : self.id })
 #         cardUpdate.start()
 
-#         # TODO: Prettify the drop event
-#         # position = e.pos()        
-#         # e.source().move(position - e.source().rect().center())
-#         e.source().select()
-#         e.setDropAction(QtCore.Qt.MoveAction)
-#         e.accept()
-
 
 class TrelloCard(QtGui.QLabel):
 
@@ -249,6 +242,7 @@ class TrelloCard(QtGui.QLabel):
             # self.tlist.board.shadowCard = self
             # self.shadow()
 
+            self.drag()
             drag = QtGui.QDrag(self)
             dragCursor = QtGui.QPixmap(os.getcwd() + config.get('resources', 'null_cursor'))
             drag.setDragCursor(dragCursor, QtCore.Qt.MoveAction)
@@ -261,6 +255,9 @@ class TrelloCard(QtGui.QLabel):
 
     def dragMoveEvent(self, e): 
         if (self == e.source()): return
+
+        samelist = (self.tlist == e.source().tlist)
+        # print samelist
 
         uphalf = e.pos().y() <= (self.height() / 2)
         
@@ -281,7 +278,6 @@ class TrelloCard(QtGui.QLabel):
         
     def dropEvent(self, e):
         e.source().deselect()
-        print "DROP %s %s" % (self, e.pos())
             
     def __str__(self):
         return "Card %s %s %s" % (self.id, self.name, self.geometry())
