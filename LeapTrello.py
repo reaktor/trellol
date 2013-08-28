@@ -156,11 +156,10 @@ class TrelloList(QtGui.QWidget):
         #       consider a tail move only when in the end
         h = config.getint('TrelloCard', 'height') + 5
         lim = h * self.tail.layout().count()
-        if lim > e.pos().y():
+        if lim < e.pos().y():
+            self.tail.addCard(e.source())
             e.accept()
             return
-        
-        # TODO: dragMove
         
 #     def dropEvent(self, e):
 #         cardUpdate = UpdateThread(self.client, e.source().id, { 'idList' : self.id })
@@ -256,26 +255,25 @@ class TrelloCard(QtGui.QLabel):
     def dragMoveEvent(self, e): 
         if (self == e.source()): return
 
-        samelist = (self.tlist == e.source().tlist)
-        # print samelist
-
-        uphalf = e.pos().y() <= (self.height() / 2)
+        cardUpperHalf = e.pos().y() <= (self.height() / 2)
         
         temp = deque()
         cardlist = self.tlist.tail
         for i in reversed(range(cardlist.count())):
             if (cardlist.getCardAt(i) == self):
-                if uphalf: temp.append(cardlist.takeCardAt(i))
-                cardlist.addCard(e.source())
-                if not uphalf: temp.append(cardlist.takeCardAt(i))                
+                if cardUpperHalf: temp.append(cardlist.takeCardAt(i))
+                temp.append(e.source())
+                if not cardUpperHalf: temp.append(cardlist.takeCardAt(i))
                 break
-            else:                
+            elif (cardlist.getCardAt(i) == e.source()):
+                cardlist.removeCard(e.source())
+            else:
                 temp.append(cardlist.takeCardAt(i))
-
+        
         for i in range(len(temp)): 
             w = temp.pop()
             cardlist.addCard(w)
-        
+
     def dropEvent(self, e):
         e.source().deselect()
             
@@ -336,7 +334,13 @@ class TrelloListCards(QtGui.QWidget):
         return self.layout().takeAt(index).widget()
 
     def removeCard(self, card):
-        card.close()
+        card.setTrellolist(None)
+        card.setParent(None)
+        for i in range(self.layout().count()):
+            if self.layout().itemAt(i) == card:
+                return self.layout().takeAt(i)
+
+        return None
 
     def addCard(self, card):
         card.setTrellolist(self.tlist)
