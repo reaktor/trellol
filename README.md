@@ -13,16 +13,16 @@ Trellol also uses Python wrapper [Trolly](https://github.com/plish/Trolly) for T
 
 ## SETUP
 
-This software requires python v.2.7.2?? or higher, PyQt4 and httplib2 installed.
+This software requires python v.2.7.2?? or higher and httplib2 installed.
 
 You will need several things from Trello to get started:
 * [Application key](https://trello.com/docs/gettingstarted/index.html#getting-a-token-from-a-user) (used by Trello to identify the application making the request) 
 * Read/write [user authorization token](https://trello.com/docs/gettingstarted/index.html#getting-an-application-key)
 * Board id 
 
-These configuration values should be set in conf file in Trellol.
+These configuration values should be set in conf file in Trellol. Further dependencies are platform-specific:
 
-* Linux setup
+1. Linux dependencies
    
    Install Xlib
 
@@ -30,9 +30,13 @@ These configuration values should be set in conf file in Trellol.
    > sudo apt-get install python-dev python-sip python-qt4
    > sudo pip install Trolly 
 
-* OS X setup
+2. OS X dependencies
 
    Make sure you have Quartz, AppKit installed
+
+   Install python, SIP package and PyQT4 package
+
+   Install Trolly: download [source](https://github.com/plish/Trolly) and run:
    > sudo python setup.py install
 
 ##LAUNCH
