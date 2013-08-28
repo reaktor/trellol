@@ -121,7 +121,7 @@ class TrelloBoard(QtGui.QMainWindow):
 class TrelloList(QtGui.QWidget):
 
     def __init__(self, board, client, listId, name, cards):
-        QtGui.QWidget.__init__(self)
+        QtGui.QWidget.__init__(self, board)
         self.board = board
         self.client = client
         self.id = listId
