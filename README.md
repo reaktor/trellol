@@ -16,9 +16,9 @@ Trellol also uses Python wrapper [Trolly](https://github.com/plish/Trolly) for T
 This software requires python v.2.7.2?? or higher, PyQt4 and httplib2 installed.
 
 You will need several things from Trello to get started:
-	* [Application key](https://trello.com/docs/gettingstarted/index.html#getting-a-token-from-a-user) (used by Trello to identify the application making the request) 
-	* Read/write [user authorization token](https://trello.com/docs/gettingstarted/index.html#getting-an-application-key)
-	* Board id 
+* [Application key](https://trello.com/docs/gettingstarted/index.html#getting-a-token-from-a-user) (used by Trello to identify the application making the request) 
+* Read/write [user authorization token](https://trello.com/docs/gettingstarted/index.html#getting-an-application-key)
+* Board id 
 
 These configuration values should be set in conf file in Trellol.
 
