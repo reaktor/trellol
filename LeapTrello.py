@@ -153,7 +153,7 @@ class TrelloList(QtGui.QWidget):
 
     def dragMoveEvent(self, e):
         # HACK: we compute a limit for the end of the card list and 
-        #       consider a tail move only when in the end
+        #       consider a tail move only below that point
         h = config.getint('TrelloCard', 'height') + 5
         lim = h * self.tail.layout().count()
         if lim < e.pos().y():
@@ -161,9 +161,9 @@ class TrelloList(QtGui.QWidget):
             e.accept()
             return
         
-#     def dropEvent(self, e):
-#         cardUpdate = UpdateThread(self.client, e.source().id, { 'idList' : self.id })
-#         cardUpdate.start()
+    def dropEvent(self, e):        
+        self.thread = UpdateThread(self.client, e.source().id, { 'idList' : self.id })
+        self.thread.start()
 
 
 class TrelloCard(QtGui.QLabel):
@@ -256,7 +256,6 @@ class TrelloCard(QtGui.QLabel):
         if (self == e.source()): return
 
         cardUpperHalf = e.pos().y() <= (self.height() / 2)
-        
         temp = deque()
         cardlist = self.tlist.tail
         for i in reversed(range(cardlist.count())):
@@ -276,6 +275,8 @@ class TrelloCard(QtGui.QLabel):
 
     def dropEvent(self, e):
         e.source().deselect()
+        self.thread = UpdateThread(self.tlist.board.client, e.source().id, { 'idList' : self.tlist.id })
+        self.thread.start()
             
     def __str__(self):
         return "Card %s %s %s" % (self.id, self.name, self.geometry())
