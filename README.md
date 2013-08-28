@@ -20,24 +20,20 @@ You will need several things from Trello to get started:
 * Read/write [user authorization token](https://trello.com/docs/gettingstarted/index.html#getting-an-application-key)
 * Board id 
 
-These configuration values should be set in conf file in Trellol. Further dependencies are platform-specific:
+These configuration values should be set in conf file in Trellol. You will also need modules [pymouse](https://github.com/SavinaRoja/PyUserInput) and [Trolly](https://github.com/plish/Trolly) installed (refer to their documentation for detailed installation information).
+
+Further dependencies are platform-specific:
 
 1. Linux dependencies
    
   * Install Xlib
   * Install Leap Motion SDK, particularly the leap motion daemon, 'leapd'
-       > sudo apt-get install python-dev python-sip python-qt4
-       > sudo pip install Trolly 
-  * Download [pymouse](https://github.com/SavinaRoja/PyUserInput) and run:
-     > python setup.py install
+   > sudo apt-get install python-dev python-sip python-qt4
 
 2. OS X dependencies
 
   * Make sure you have Quartz, AppKit installed
   * Install python, SIP and PyQT4 packages
-  * Install Trolly: download [source](https://github.com/plish/Trolly) and run:
-     > sudo python setup.py install
-  * Install [pymouse](https://github.com/SavinaRoja/PyUserInput) 
 
 ##LAUNCH
 
