@@ -162,7 +162,7 @@ class TrelloList(QtGui.QWidget):
             return
         
     def dropEvent(self, e):        
-        self.thread = UpdateThread(self.client, e.source().id, { 'idList' : self.id })
+        self.thread = UpdateThread(e.source(), "MOVE")
         self.thread.start()
 
 
@@ -274,8 +274,8 @@ class TrelloCard(QtGui.QLabel):
             cardlist.addCard(w)
 
     def dropEvent(self, e):
-        e.source().deselect()
-        self.thread = UpdateThread(self.tlist.board.client, e.source().id, { 'idList' : self.tlist.id })
+        e.source().deselect()        
+        self.thread = UpdateThread(e.source(), "MOVE")
         self.thread.start()
             
     def __str__(self):
@@ -349,14 +349,35 @@ class TrelloListCards(QtGui.QWidget):
 
 
 class UpdateThread(QtCore.QThread):
-    def __init__(self, client, cardId, queryParams = {}):
+
+    def __init__(self, card, op):
         QtCore.QThread.__init__(self)
-        self.client = client
-        self.cardId = cardId
-        self.queryParams = queryParams
-  
+        self.OPS = { 'MOVE' : self.move }
+
+        self.card = card
+        self.client = self.card.tlist.board.client
+        self.op = self.OPS[op]
+
+    def move(self):
+        tcard = Card(self.client, self.card.id)
+        queryParams = { 'idList' : self.card.tlist.id, 'pos' : 'bottom' }
+
+        temp = deque()
+        cardlist = self.card.tlist.tail        
+        for i in reversed(range(cardlist.count())):
+            ca = cardlist.getCardAt(i)
+            if (ca == self.card):
+                Card(self.client, ca.id).updateCard(queryParams)
+                break
+            else:
+                temp.append(ca)
+
+        for i in range(len(temp)): 
+            ca = temp.pop()
+            Card(self.client, ca.id).updateCard(queryParams)
+
     def run(self):
-        Card(self.client, self.cardId).updateCard(self.queryParams)
+        self.op()
 
 
 def main():    
