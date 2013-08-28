@@ -1,9 +1,9 @@
 Trellol
 ================
 
-This is a module which uses [Trello's API](https://trello.com/docs/) and provides an own UI to move Trello cards with Leap Motion gestures. User can select one card at a time with a tap gesture and move selected card onto a new location on Trello board. These changes update corresponding Trello board cards. 
+This is a module which uses [Trello's API](https://trello.com/docs/) and provides a QT-based UI to move Trello cards with Leap Motion gestures. User can select one card at a time with a tap gesture and move selected card onto a new location on Trello board. These changes update corresponding Trello board cards. 
 
-Trellol is written in Python and its UI is implemented with PyQt. Leap Motion gesture control should work on most Linux systems. 
+Trellol is written in Python. Leap Motion gesture control should work on most Linux systems. 
 
 ## DOCUMENTATION
 
@@ -20,7 +20,7 @@ You will need several things from Trello to get started:
 * Read/write [user authorization token](https://trello.com/docs/gettingstarted/index.html#getting-an-application-key)
 * Board id 
 
-These configuration values should be set in conf file in Trellol. You will also need modules [pymouse](https://github.com/SavinaRoja/PyUserInput) and [Trolly](https://github.com/plish/Trolly) installed (refer to their documentation for detailed installation information and additional dependencies).
+These configuration values should be set in conf file in Trellol. You will also need modules [pymouse](https://github.com/SavinaRoja/PyUserInput) and [Trolly](https://github.com/plish/Trolly) installed (Refer to their documentation for detailed installation information and additional dependencies).
 
 Further dependencies are platform-specific:
 
