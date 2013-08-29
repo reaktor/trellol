@@ -50,8 +50,7 @@ class ScrollEventMixin(object):
 
     def dragEnterEvent(self, e): 
         e.accept()
-    
-    
+
 class TrelloBoard(QtGui.QMainWindow):  
 
     pointingMultiplier = QtCore.pyqtSignal(int)
@@ -108,6 +107,7 @@ class TrelloBoard(QtGui.QMainWindow):
         
         #self.cursorImg = QtGui.QPixmap(os.getcwd() + self.config.get('resources', 'ball_cursor'))
         self.cursorImg = QtGui.QPixmap(os.getcwd() + self.config.get('resources', 'null_cursor'))
+
         self.setCursor(QtGui.QCursor(self.cursorImg, -1, -1))
         
         self.center()
@@ -241,7 +241,6 @@ class TrelloList(QtGui.QWidget, ScrollEventMixin):
         if (self.board.currentCard is not None):
             TrelloCard.mouseMoveEvent(self.board.currentCard, event)
 
-
 class TrelloCard(QtGui.QLabel, ScrollEventMixin):
 
     def __init__(self, config, tlist, cardId, name):
@@ -261,7 +260,7 @@ class TrelloCard(QtGui.QLabel, ScrollEventMixin):
         self.trelloCardMemberBorder = config.getint('TrelloCard', 'member_border')
         self.trelloCardWidth = self.config.getint('TrelloCard', 'width')
         self.trelloCardHeight = self.config.getint('TrelloCard', 'height')
-        
+   
         self.setMouseTracking(True)
         self.setText(self.name)
         self.addMembers(self.id)
@@ -346,6 +345,7 @@ class TrelloCard(QtGui.QLabel, ScrollEventMixin):
             drag.setMimeData(mimeData)
             drag.setHotSpot(event.pos())        
             drag.exec_(QtCore.Qt.MoveAction)
+        event.accept()
 
     def dragEnterEvent(self, e):
         e.accept() # needed for DragMoveEvent
@@ -427,7 +427,6 @@ class TrelloListCards(QtGui.QWidget, ScrollEventMixin):
         self.board = tlist.board        
 
         self.trelloListCardsStyle = self.config.get('TrelloListCards', 'style')
-
         self.setLayout(QtGui.QFormLayout())
         for index,card in enumerate(cards):            
             tc = TrelloCard(config, tlist, card.id, card.name)
