@@ -12,4 +12,4 @@ else
     exit
 fi
 
-python LeapTrello.py
+python LeapTrello.py $1 $2 $3 $4
