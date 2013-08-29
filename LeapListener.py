@@ -24,6 +24,7 @@ class LeapListener(Leap.Listener):
 
         self.downPressed = False    
         self.pointingMultiplier = 15
+        self.zmargin = 100
                 
     def on_init(self, controller):
         print "Initialized"
@@ -45,12 +46,12 @@ class LeapListener(Leap.Listener):
         if not frame.hands.empty:
             hpos = frame.hands[0].palm_position
             x,y,z = hpos[0],hpos[1],hpos[2]
-                
+
             rawxpos = self.screenCenterW + x*self.pointingMultiplier
-            rawypos = self.screenCenterH + z*self.pointingMultiplier
+            rawypos = self.screenCenterH + (z-self.zmargin)*self.pointingMultiplier
             xpos = max(min(rawxpos, self.screenW),0)
             ypos = max(min(rawypos, self.screenH),0)
-                
+   
             self.mouse.move(xpos, ypos)
      
             # TAP
@@ -76,3 +77,6 @@ class LeapListener(Leap.Listener):
 
         if state == Leap.Gesture.STATE_INVALID:
             return "STATE_INVALID"
+
+    def setPointingMultiplier(self, pointingMultiplier):
+        self.pointingMultiplier = pointingMultiplier
