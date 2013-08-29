@@ -24,6 +24,34 @@ from trolly.member import Member
 import ConfigParser
 config = ConfigParser.ConfigParser()
 config.read('conf')
+
+class ScrollEventMixin(object):   
+
+    def mouseMoveEvent(self, event):
+        bx, by, w, h = self.board.geometry().getRect()
+        x,y = event.globalPos().x(), event.globalPos().y()
+
+        scrollZone = config.getint('TrelloBoard', 'scroll_zone_size')
+        scrollSpeed = config.getint('TrelloBoard', 'scroll_speed')
+        def maxi(i): return max(i, scrollSpeed)
+
+        wDiff = x - bx
+        isLeft = wDiff < scrollZone
+        isRight =  (w - wDiff) < scrollZone
+        sb = self.board.scrollArea.horizontalScrollBar()
+        if (isLeft): sb.setValue(sb.value() - maxi(wDiff))
+        if (isRight): sb.setValue(sb.value() + maxi(w - wDiff))
+
+        hDiff = y - by
+        isTop = hDiff < scrollZone 
+        isBottom = (h - hDiff) < scrollZone
+        sb = self.board.scrollArea.verticalScrollBar()
+        if (isTop): sb.setValue(sb.value() - maxi(hDiff))
+        if (isBottom): sb.setValue(sb.value() + maxi((h - hDiff)))
+
+    def dragMouseEvent(self, event):
+        print event.pos()
+    
     
 class TrelloBoard(QtGui.QMainWindow):  
     TrelloBoardStyle=config.get('TrelloBoard', 'style')
@@ -37,13 +65,35 @@ class TrelloBoard(QtGui.QMainWindow):
         self.boardId = boardId
 
         self.board = Board(client, boardId)
+        self.screen = QtGui.QDesktopWidget().screenGeometry()
         self.setMouseTracking(True)
 
-        self.render()
         self.style()
         self.show()
 
     def style(self):           
+        self.window = QtGui.QWidget();
+        hbox = QtGui.QHBoxLayout()
+        self.window.setLayout(hbox)
+
+        self.setCentralWidget(self.window)
+        hbox.setSpacing(0)
+        lists = self.board.getLists()
+        for rawlist in lists:            
+            cards = rawlist.getCards()
+            hbox.addWidget( TrelloList( self, self.client, rawlist.id, rawlist.name, cards ) ) 
+
+        self.scrollArea = QtGui.QScrollArea()
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setEnabled(True)
+        self.scrollArea.setWidget(self.window)
+        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setCentralWidget(self.scrollArea)
+
+        self.currentCard = None
+        self.shadowCard = None
+
         self.setWindowTitle(config.get('main', 'title'))
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.setStyleSheet(self.TrelloBoardStyle)        
@@ -63,32 +113,10 @@ class TrelloBoard(QtGui.QMainWindow):
         mainwidth = config.getint('main', 'width')
         mainheight = config.getint('main', 'height')
 
-        screen = QtGui.QDesktopWidget().screenGeometry()
         self.setGeometry(mainposx, mainposy, mainwidth, mainheight)        
         size = self.geometry()
-        self.move((screen.width() - size.width()) / 2, (screen.height() - size.height()) / 2)
+        self.move((self.screen.width() - size.width()) / 2, (self.screen.height() - size.height()) / 2)
       
-    def render(self):
-        self.window = QtGui.QWidget();
-        hbox = QtGui.QHBoxLayout()
-        self.window.setLayout(hbox)
-
-        self.setCentralWidget(self.window)
-        hbox.setSpacing(0)
-        lists = self.board.getLists()
-        for rawlist in lists:            
-            cards = rawlist.getCards()
-            hbox.addWidget( TrelloList( self, self.client, rawlist.id, rawlist.name, cards ) ) 
-
-        self.scrollArea = QtGui.QScrollArea()
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setEnabled(True)
-        self.scrollArea.setWidget(self.window)
-        self.setCentralWidget(self.scrollArea)
-
-        self.currentCard = None
-        self.shadowCard = None
-
     def keyPressEvent(self, event):
         key = event.key()
         if key == QtCore.Qt.Key_Escape:
@@ -118,7 +146,7 @@ class TrelloBoard(QtGui.QMainWindow):
             TrelloCard.mousePressEvent(self.currentCard, event)
 
 
-class TrelloList(QtGui.QWidget):
+class TrelloList(QtGui.QWidget, ScrollEventMixin):
 
     def __init__(self, board, client, listId, name, cards):
         QtGui.QWidget.__init__(self, board)
@@ -128,7 +156,7 @@ class TrelloList(QtGui.QWidget):
         self.name = name
 
         layout = QtGui.QFormLayout()
-        self.head = TrelloListHeader(self.name)
+        self.head = TrelloListHeader(self, self.name)
         layout.addWidget(self.head)
         self.tail = TrelloListCards(self, cards)
         layout.addWidget(self.tail)
@@ -138,6 +166,7 @@ class TrelloList(QtGui.QWidget):
         self.show()
         
         self.setAcceptDrops(True)
+        self.setMouseTracking(True)
 
     def style(self):
         self.layout().setHorizontalSpacing(0)
@@ -152,6 +181,7 @@ class TrelloList(QtGui.QWidget):
         e.accept()
 
     def dragMoveEvent(self, e):
+        
         # HACK: we compute a limit for the end of the card list and 
         #       consider a tail move only below that point
         h = config.getint('TrelloCard', 'height') + 5
@@ -166,7 +196,7 @@ class TrelloList(QtGui.QWidget):
         self.thread.start()
 
 
-class TrelloCard(QtGui.QLabel):
+class TrelloCard(QtGui.QLabel, ScrollEventMixin):
 
     TrelloCardDeselectStyle = config.get('TrelloCard', 'deselect_style')
     TrelloCardSelectStyle = config.get('TrelloCard', 'select_style')
@@ -180,6 +210,7 @@ class TrelloCard(QtGui.QLabel):
         self.id = cardId
         self.name = name
         self.tlist = tlist
+        self.board = tlist.board
         
         self.setMouseTracking(True)
         self.setText(self.name)
@@ -225,6 +256,7 @@ class TrelloCard(QtGui.QLabel):
         self.tlist = tlist
 
     def mouseMoveEvent(self, event):
+        ScrollEventMixin.mouseMoveEvent(self, event)
 
         # select by hover over card
         if (self.tlist.board.currentCard is not self):
@@ -250,10 +282,19 @@ class TrelloCard(QtGui.QLabel):
             drag.setHotSpot(event.pos())        
             drag.exec_(QtCore.Qt.MoveAction)
             
+        event.accept()
+
     def dragEnterEvent(self, e):
         e.accept() # needed for DragMoveEvent
 
     def dragMoveEvent(self, e): 
+        # # TODO: scroll while dragging, below is almost there
+        # glob = QtCore.QPoint(self.board.x() + e.pos().x(), self.board.y() + e.pos().y())
+        # ev = QtGui.QMouseEvent(QtCore.QEvent.MouseMove, e.pos(), glob, 
+        #                        QtCore.Qt.NoButton, QtCore.Qt.NoButton, QtCore.Qt.NoModifier)     
+        # print ev.pos(), ev.globalPos()
+        # ScrollEventMixin.mouseMoveEvent(self, ev)    
+
         if (self == e.source()): return
 
         cardUpperHalf = e.pos().y() <= (self.height() / 2)
@@ -286,16 +327,19 @@ class TrelloCard(QtGui.QLabel):
         return self.__str__()
 
 
-class TrelloListHeader(QtGui.QLabel):
+class TrelloListHeader(QtGui.QLabel, ScrollEventMixin):
     TrelloListHeaderStyle = config.get('TrelloListHeader', 'style')
     TrelloCardWidth = config.getint('TrelloCard', 'width')
     TrelloCardHeight = config.getint('TrelloCard', 'height')
 
-    def __init__(self, text):
+    def __init__(self, tlist, text):
         QtGui.QLabel.__init__(self)
 
+        self.board = tlist.board
         self.setText(text)
         self.style()
+
+        self.setMouseTracking(True)
 
     def style(self):
         self.setFixedHeight(self.TrelloCardHeight/4)
@@ -303,21 +347,23 @@ class TrelloListHeader(QtGui.QLabel):
         self.setStyleSheet(self.TrelloListHeaderStyle) 
 
     def __str__(self):
-        return "TrelloListHeader|'%s'" % (self.text)
+        return "TrelloListHeader|'%s'" % (self.text())
     def __repr__(self):
         return self.__str__()
   
-
-class TrelloListCards(QtGui.QWidget):
+class TrelloListCards(QtGui.QWidget, ScrollEventMixin):
     TrelloListCardsStyle = config.get('TrelloListCards', 'style')
 
     def __init__( self, tlist, cards):
         QtGui.QWidget.__init__(self, tlist)
         self.tlist = tlist
+        self.board = tlist.board
         self.setLayout(QtGui.QFormLayout())
         for index,card in enumerate(cards):            
             tc = TrelloCard(tlist, card.id, card.name)
             self.addCard(tc)
+
+        self.setMouseTracking(True)
  
         self.style()
 
@@ -348,6 +394,10 @@ class TrelloListCards(QtGui.QWidget):
         card.setTrellolist(self.tlist)
         self.layout().addWidget(card)
 
+    def __str__(self):
+        return "TrelloListCards| %d card(s)" % (self.layout().count())
+    def __repr__(self):
+        return self.__str__()
 
 class UpdateThread(QtCore.QThread):
 
