@@ -227,18 +227,19 @@ class TrelloCard(QtGui.QLabel, ScrollEventMixin):
         self.trelloCardSelectStyle = self.config.get('TrelloCard', 'select_style')
         self.trelloCardDragStyle = self.config.get('TrelloCard', 'drag_style')
         self.trelloCardShadowStyle = self.config.get('TrelloCard', 'shadow_style')
+        self.trelloCardMemberStyle = config.get('TrelloCard', 'member_style')
+        self.trelloCardMemberHeight = config.getint('TrelloCard', 'member_height')
+        self.trelloCardMemberBorder = config.getint('TrelloCard', 'member_border')
         self.trelloCardWidth = self.config.getint('TrelloCard', 'width')
         self.trelloCardHeight = self.config.getint('TrelloCard', 'height')
         
         self.setMouseTracking(True)
         self.setText(self.name)
+        self.addMembers(self.id)
         self.setAcceptDrops(True)
         self.isShadow = False
 
         self.style()
-        #idMembers = card.getCardInformation()['idMembers']
-        #for idMember in idMembers:
-        #    print Member(self.tlist.board.client, idMember).getMemberInformation()['fullName']
 
     def style(self):
         self.setAlignment(QtCore.Qt.AlignCenter)
@@ -269,6 +270,24 @@ class TrelloCard(QtGui.QLabel, ScrollEventMixin):
         thisx, thisy = self.getCentroid()
         dist = math.sqrt( (math.pow(thisx - x, 2) + math.pow(thisy - y, 2)))
         return dist
+
+    def addMembers(self, cardId):
+        members = Card(self.tlist.board.client, cardId).getCardInformation()['idMembers']
+        
+        for i, member in enumerate(members):
+            initials = Member(self.tlist.board.client, member).getMemberInformation()['initials']
+            self.addMemberLabel(
+                self, 
+                initials, 
+                self.TrelloCardMemberBorder + 25 * i, 
+                self.TrelloCardHeight - self.TrelloCardMemberHeight -  self.TrelloCardMemberBorder
+            )
+            
+    def addMemberLabel(self, parent, text, x, y):
+        label = QtGui.QLabel(text, parent)
+        label.setFixedHeight(self.TrelloCardMemberHeight)
+        label.setStyleSheet(self.TrelloCardMemberStyle)
+        label.move(x, y)
 
     def setTrellolist(self, tlist):
         self.tlist = tlist
