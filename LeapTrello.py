@@ -225,6 +225,7 @@ class TrelloCard(QtGui.QLabel):
         self.tlist = tlist
 
     def mouseMoveEvent(self, event):
+
         # select by hover over card
         if (self.tlist.board.currentCard is not self):
             if (self.tlist.board.currentCard is not None):
@@ -286,7 +287,7 @@ class TrelloCard(QtGui.QLabel):
 
 
 class TrelloListHeader(QtGui.QLabel):
-    TrelloListHeaderStyle=config.get('TrelloListHeader', 'style')
+    TrelloListHeaderStyle = config.get('TrelloListHeader', 'style')
     TrelloCardWidth = config.getint('TrelloCard', 'width')
     TrelloCardHeight = config.getint('TrelloCard', 'height')
 
@@ -308,7 +309,7 @@ class TrelloListHeader(QtGui.QLabel):
   
 
 class TrelloListCards(QtGui.QWidget):
-    TrelloListCardsStyle=config.get('TrelloListCards', 'style')
+    TrelloListCardsStyle = config.get('TrelloListCards', 'style')
 
     def __init__( self, tlist, cards):
         QtGui.QWidget.__init__(self, tlist)

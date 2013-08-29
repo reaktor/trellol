@@ -54,11 +54,7 @@ class LeapListener(Leap.Listener):
             self.mouse.move(xpos, ypos)
      
             # TAP
-            if y >= 250:
-                #TODO: implement scrolling 
-                print "(%s, %s)" % (x, y) 
-                pass
-            elif not frame.gestures().empty :
+            if not frame.gestures().empty :
                 for gesture in frame.gestures():
                     if gesture.type == Leap.Gesture.TYPE_KEY_TAP:
                         if not self.downPressed:
