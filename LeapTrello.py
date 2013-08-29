@@ -27,6 +27,7 @@ config.read('conf')
     
 class TrelloBoard(QtGui.QMainWindow):  
     TrelloBoardStyle=config.get('TrelloBoard', 'style')
+    pointingMultiplier = QtCore.pyqtSignal(int)
 
     def __init__(self, client, app, boardId):
         QtGui.QMainWindow.__init__(self)
@@ -39,6 +40,7 @@ class TrelloBoard(QtGui.QMainWindow):
         self.board = Board(client, boardId)
         self.setMouseTracking(True)
 
+        self.updatePointingMultiplier()
         self.render()
         self.style()
         self.show()
@@ -99,6 +101,7 @@ class TrelloBoard(QtGui.QMainWindow):
             else:
                 self.showFullScreen()
 
+        self.updatePointingMultiplier()
         return QtGui.QWidget.keyPressEvent(self, event)
 
     def resizeEvent(self, e):
@@ -117,6 +120,10 @@ class TrelloBoard(QtGui.QMainWindow):
         if (self.currentCard is not None):
             TrelloCard.mousePressEvent(self.currentCard, event)
 
+    def updatePointingMultiplier(self):
+        diagonal = math.sqrt( (math.pow(self.width(), 2) + math.pow(self.height(), 2)))
+        multiplier = max(min(diagonal / 100, 20), 5)
+        self.pointingMultiplier.emit(multiplier)
 
 class TrelloList(QtGui.QWidget):
 
@@ -392,6 +399,8 @@ def main():
     board = TrelloBoard(client, app, boardId)
 
     listener = LeapListener()
+    board.pointingMultiplier[int].connect(listener.setPointingMultiplier)
+
     controller = Leap.Controller()
     controller.add_listener(listener)
 
