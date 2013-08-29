@@ -49,6 +49,9 @@ class ScrollEventMixin(object):
         if (isTop): sb.setValue(sb.value() - maxi(hDiff))
         if (isBottom): sb.setValue(sb.value() + maxi((h - hDiff)))
 
+    def dragEnterEvent(self, e): 
+        e.accept()
+
     def dragMouseEvent(self, event):
         print event.pos()
     
@@ -187,8 +190,7 @@ class TrelloList(QtGui.QWidget, ScrollEventMixin):
     def dragEnterEvent(self, e): 
         e.accept()
 
-    def dragMoveEvent(self, e):
-        
+    def dragMoveEvent(self, e):        
         # HACK: we compute a limit for the end of the card list and 
         #       consider a tail move only below that point
         h = config.getint('TrelloCard', 'height') + 5
@@ -197,10 +199,17 @@ class TrelloList(QtGui.QWidget, ScrollEventMixin):
             self.tail.addCard(e.source())
             e.accept()
             return
+
+        print "dragMoveEvent TList"
+        TrelloCard.dragMoveEvent(self.board.currentCard, e)
         
     def dropEvent(self, e):        
         self.thread = UpdateThread(e.source(), "MOVE")
         self.thread.start()
+
+    def mousePressEvent(self, event):
+        if (self.board.currentCard is not None):
+            TrelloCard.mouseMoveEvent(self.board.currentCard, event)
 
 
 class TrelloCard(QtGui.QLabel, ScrollEventMixin):
@@ -273,8 +282,7 @@ class TrelloCard(QtGui.QLabel, ScrollEventMixin):
             self.select()
 
         # start drag on 'mouse' press
-        if not event.buttons() == QtCore.Qt.NoButton:
-
+        if not (event.buttons() == QtCore.Qt.NoButton):
             mimeData = QtCore.QMimeData()
 
             # pixmap = QtGui.QPixmap.grabWidget(self)  # TODO decide between shadow+dragImg vs. no-mouse
@@ -289,13 +297,11 @@ class TrelloCard(QtGui.QLabel, ScrollEventMixin):
             drag.setHotSpot(event.pos())        
             drag.exec_(QtCore.Qt.MoveAction)
             
-        event.accept()
-
     def dragEnterEvent(self, e):
         e.accept() # needed for DragMoveEvent
 
     def dragMoveEvent(self, e): 
-        # # TODO: scroll while dragging, below is almost there
+        # # TODO: scroll while dragging; a good start below
         # glob = QtCore.QPoint(self.board.x() + e.pos().x(), self.board.y() + e.pos().y())
         # ev = QtGui.QMouseEvent(QtCore.QEvent.MouseMove, e.pos(), glob, 
         #                        QtCore.Qt.NoButton, QtCore.Qt.NoButton, QtCore.Qt.NoModifier)     
