@@ -48,7 +48,7 @@ class ScrollEventMixin(object):
         if (isTop): sb.setValue(sb.value() - maxi(hDiff))
         if (isBottom): sb.setValue(sb.value() + maxi((h - hDiff)))
 
-    def dragEnterEvent(self, e): 
+    def dragEnterEvent(self, e):
         e.accept()
 
 class TrelloBoard(QtGui.QMainWindow):  
@@ -71,7 +71,6 @@ class TrelloBoard(QtGui.QMainWindow):
         self.setMouseTracking(True)
 
         self.updatePointingMultiplier()
-
         self.style()
         self.show()
 
@@ -240,6 +239,7 @@ class TrelloList(QtGui.QWidget, ScrollEventMixin):
     def mousePressEvent(self, event):
         if (self.board.currentCard is not None):
             TrelloCard.mouseMoveEvent(self.board.currentCard, event)
+            
 
 class TrelloCard(QtGui.QLabel, ScrollEventMixin):
 
@@ -345,7 +345,6 @@ class TrelloCard(QtGui.QLabel, ScrollEventMixin):
             drag.setMimeData(mimeData)
             drag.setHotSpot(event.pos())        
             drag.exec_(QtCore.Qt.MoveAction)
-        event.accept()
 
     def dragEnterEvent(self, e):
         e.accept() # needed for DragMoveEvent
