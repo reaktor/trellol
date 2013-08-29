@@ -105,12 +105,12 @@ class TrelloBoard(QtGui.QMainWindow):
         return QtGui.QWidget.keyPressEvent(self, event)
 
     def resizeEvent(self, e):
-        self.logo.setGeometry(
-            config.getint('TrelloBoard', 'logo_pos_x'), 
-            config.getint('main', 'height') - config.getint('TrelloBoard', 'logo_height') - config.getint('TrelloBoard', 'logo_pos_x'), 
-            config.getint('TrelloBoard', 'logo_width'), 
-            config.getint('TrelloBoard', 'logo_height')
-        )
+        logo_h = config.getint('TrelloBoard', 'logo_height') 
+        logo_w = config.getint('TrelloBoard', 'logo_width') 
+        logo_x = config.getint('TrelloBoard', 'logo_pos_x')
+        logo_y = self.height() - logo_h - config.getint('TrelloBoard', 'logo_pos_x')
+        
+        self.logo.setGeometry(logo_x, logo_y, logo_w, logo_h)
 
     def mouseMoveEvent(self, event):
         if (self.currentCard is not None):
