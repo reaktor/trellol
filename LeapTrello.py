@@ -131,8 +131,8 @@ class TrelloBoard(QtGui.QMainWindow):
                 self.showNormal()
             else:
                 self.showFullScreen()
+            self.updatePointingMultiplier()
 
-        self.updatePointingMultiplier()
         return QtGui.QWidget.keyPressEvent(self, event)
 
     def resizeEvent(self, e):
@@ -149,12 +149,41 @@ class TrelloBoard(QtGui.QMainWindow):
 
     def mousePressEvent(self, event):
         if (self.currentCard is not None):
-            TrelloCard.mousePressEvent(self.currentCard, event)
+            self.cardDetails = TrelloCardDescription(self, self.currentCard.id)
+            self.cardDetails.exec_()
 
     def updatePointingMultiplier(self):
         diagonal = math.sqrt( (math.pow(self.width(), 2) + math.pow(self.height(), 2)))
         multiplier = max(min(diagonal / 100, 20), 5)
         self.pointingMultiplier.emit(multiplier)
+
+class TrelloCardDescription(QtGui.QDialog):
+
+    def __init__(self, board, cardId):
+        QtGui.QDialog.__init__(self, board)
+        self.id = cardId
+        self.card = Card(board.client, self.id).getCardInformation()
+        self.width = 800
+        self.height = 600
+
+        self.style()
+        self.center()
+        self.render()
+
+    def style(self):
+        self.setFixedWidth(self.width)
+        self.setFixedHeight(self.height)
+
+    def center(self):
+        screen = QtGui.QDesktopWidget().screenGeometry()
+        self.move((screen.width() - self.width) / 2, (screen.height() - self.height) / 2)
+
+    def render(self):
+        vbox = QtGui.QFormLayout()
+        vbox.addWidget(QtGui.QLabel("Card Label: %s" % self.card['name']))
+        vbox.addWidget(QtGui.QLabel("Id: %s" % self.id))
+        vbox.addWidget(QtGui.QLabel("Description: %s" % self.card['desc']))
+        self.setLayout(vbox)
 
 class TrelloList(QtGui.QWidget, ScrollEventMixin):
 
@@ -317,7 +346,7 @@ class TrelloCard(QtGui.QLabel, ScrollEventMixin):
             drag.setMimeData(mimeData)
             drag.setHotSpot(event.pos())        
             drag.exec_(QtCore.Qt.MoveAction)
-            
+
     def dragEnterEvent(self, e):
         e.accept() # needed for DragMoveEvent
 
