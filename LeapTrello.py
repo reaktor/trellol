@@ -70,7 +70,6 @@ class TrelloBoard(QtGui.QMainWindow):
         self.setMouseTracking(True)
         self.updatePointingMultiplier()
 
-        self.render()
         self.style()
         self.show()
 
