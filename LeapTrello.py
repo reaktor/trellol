@@ -236,10 +236,16 @@ class TrelloList(QtGui.QWidget, ScrollEventMixin):
         self.thread = UpdateThread(e.source(), "MOVE")
         self.thread.start()
 
+    
     def mousePressEvent(self, event):
         if (self.board.currentCard is not None):
-            TrelloCard.mouseMoveEvent(self.board.currentCard, event)
-            
+            if (event.buttons() == QtCore.Qt.RightButton):
+                self.board.cardDetails = TrelloCardDescription(self.board, self.board.currentCard.id)
+                self.board.cardDetails.exec_()
+            elif (event.buttons() == QtCore.Qt.LeftButton):
+                TrelloCard.mouseMoveEvent(self.board.currentCard, event)
+
+
 
 class TrelloCard(QtGui.QLabel, ScrollEventMixin):
 
@@ -307,14 +313,14 @@ class TrelloCard(QtGui.QLabel, ScrollEventMixin):
             self.addMemberLabel(
                 self, 
                 initials, 
-                self.TrelloCardMemberBorder + 25 * i, 
-                self.TrelloCardHeight - self.TrelloCardMemberHeight -  self.TrelloCardMemberBorder
+                self.trelloCardMemberBorder + 25 * i, 
+                self.trelloCardHeight - self.trelloCardMemberHeight -  self.trelloCardMemberBorder
             )
             
     def addMemberLabel(self, parent, text, x, y):
         label = QtGui.QLabel(text, parent)
-        label.setFixedHeight(self.TrelloCardMemberHeight)
-        label.setStyleSheet(self.TrelloCardMemberStyle)
+        label.setFixedHeight(self.trelloCardMemberHeight)
+        label.setStyleSheet(self.trelloCardMemberStyle)
         label.move(x, y)
 
     def setTrellolist(self, tlist):
