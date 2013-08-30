@@ -44,4 +44,4 @@ Note: If you are running program under Linux, make sure you have leap motion dae
 
 ## LICENSE
 
-This program is licensed under ??? license
+This program is licensed under the [MIT License](http://opensource.org/licenses/MIT).
